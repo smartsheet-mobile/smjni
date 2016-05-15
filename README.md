@@ -49,7 +49,7 @@ classes partially natively or using Java from within C++ application.
 ## Building
 
 Smjni originated on Android so it comes with Android.mk and build.gradle for ndk-build and experimental Gradle plugin respectively.
-In addition it provides portable CMake script that *should* work everywhere and Cocoapods package for Xcode users.
+In addition it provides portable CMake script that *should* work everywhere.
 Instructions for users of other build systems are provided at the end of this section
 
 ### Android 
