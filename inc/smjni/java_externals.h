@@ -21,9 +21,14 @@
 
 namespace smjni
 {
-    [[noreturn]] void throw_java_problem(const char * file_line, const char * format, ...) __attribute__((format (printf, 2, 3)));
-    void log_java_error(const std::exception & ex) noexcept;
-    void log_java_error(const char * format, ...) noexcept __attribute__((format (printf, 1, 2)));
+    void set_externals([[noreturn]] void (*thrower)(const char *, const char *, va_list), 
+                       void (*logger)(const std::exception &, const char *, va_list) noexcept);
+    
+    namespace internal
+    {
+        [[noreturn]] void do_throw_problem(const char * file_line, const char * format, ...) __attribute__((format (printf, 2, 3)));
+        void do_log_error(const std::exception & ex, const char * format, ...) noexcept __attribute__((format (printf, 2, 3)));
+    }
 }
 
 #define JAVA_STRINGIZE1(x) #x
@@ -31,7 +36,7 @@ namespace smjni
 
 #define JAVA_FILE_LINE __FILE__ ":" JAVA_STRINGIZE(__LINE__)
 
-#define THROW_JAVA_PROBLEM(format, ...) throw_java_problem(JAVA_FILE_LINE, format, ##__VA_ARGS__)
+#define THROW_JAVA_PROBLEM(format, ...) ::smjni::internal::do_throw_problem(JAVA_FILE_LINE, format, ##__VA_ARGS__)
 
 
 #endif

@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "smjni/java_string.h"
+#include <smjni/java_string.h>
 #include <smjni/java_exception.h>
 #include <smjni/java_runtime.h>
 
@@ -34,7 +34,7 @@ const char * java_exception::what() const noexcept
         }
         catch(std::exception & ex)
         {
-            log_java_error("exception while trying to produce exception description");
+            internal::do_log_error(ex, "exception while trying to produce exception description");
             //ignore
         }
     }

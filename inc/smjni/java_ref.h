@@ -137,7 +137,7 @@ namespace smjni
             }
             catch(std::exception & ex)
             {
-                log_java_error(ex);
+                internal::do_log_error(ex, nullptr);
                 std::terminate();
             }
         }
@@ -149,7 +149,7 @@ namespace smjni
             }
             catch(std::exception & ex)
             {
-                log_java_error(ex);
+                internal::do_log_error(ex, nullptr);
             }
         }
     private:
