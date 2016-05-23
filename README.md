@@ -49,7 +49,7 @@ classes partially natively or using Java from within C++ application.
 
 ## Building
 
-Instructions on how to build SmJNI are available on project [wiki](https://github.com/smartsheet-mobile/smjni/wiki#building)
+Instructions on how to build SmJNI are available on project [wiki](https://github.com/smartsheet-mobile/smjni/wiki/Building)
 
 ## User's Guide
 
