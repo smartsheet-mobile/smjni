@@ -26,11 +26,11 @@
 
 using namespace smjni;
 
-[[noreturn]] static void (*g_throw_problem)(const char *, const char *, va_list) = nullptr;
+static void (*g_throw_problem)(const char *, const char *, va_list) = nullptr;
 static void (*g_log_error)(const std::exception &, const char *, va_list) noexcept = nullptr;
 
-void smjni::set_externals([[noreturn]] void (*thrower)(const char *, const char *, va_list), 
-                           void (*logger)(const std::exception &, const char *, va_list) noexcept)
+void smjni::set_externals(void (*thrower)(const char *, const char *, va_list), 
+                          void (*logger)(const std::exception &, const char *, va_list) noexcept)
 {
     g_throw_problem = thrower;
     g_log_error = logger;

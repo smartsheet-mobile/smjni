@@ -21,7 +21,7 @@
 
 namespace smjni
 {
-    void set_externals([[noreturn]] void (*thrower)(const char *, const char *, va_list), 
+    void set_externals(void (*thrower)(const char *, const char *, va_list), 
                        void (*logger)(const std::exception &, const char *, va_list) noexcept);
     
     namespace internal
