@@ -21,6 +21,7 @@
 #endif
 
 #include <stdexcept>
+#include <stdlib.h>
 
 #include <smjni/java_externals.h>
 
