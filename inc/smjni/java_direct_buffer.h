@@ -61,7 +61,7 @@ namespace smjni
             if (!ret)
             {
                 java_exception::check(env);
-                THROW_JAVA_PROBLEM("cannot create java string");
+                THROW_JAVA_PROBLEM("cannot create java buffer");
             }
             return jattach(env, ret);
         } 
