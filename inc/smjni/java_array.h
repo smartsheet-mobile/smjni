@@ -46,7 +46,7 @@ namespace smjni
             public:
                 operator local_java_ref<element_type>() const
                 {
-                    return jattach(m_parent->get(m_idx));
+                    return jattach(m_parent->m_env, m_parent->get(m_idx));
                 }
                 void operator=(element_type el)
                 {
