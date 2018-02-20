@@ -18,6 +18,7 @@
 #define HEADER_SMJNI_H_INCLUDED
 
 
+#include <smjni/java_types.h>
 #include <smjni/jni_provider.h>
 #include <smjni/java_ref.h>
 #include <smjni/java_type_traits.h>
