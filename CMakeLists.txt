@@ -17,9 +17,15 @@
 cmake_minimum_required(VERSION 3.5)
 project(smjni)
 
-find_package(JNI)
+if (NOT ANDROID)
+    find_package(JNI)
 
-set(JNI_INCLUDE_DIRS ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} CACHE PATH "JNI include dirs")
+    set(JNI_INCLUDE_DIRS ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} CACHE PATH "JNI include dirs")
+else()
+    set(JNI_INCLUDE_DIRS "")
+endif()
+
+
 
 file(GLOB SOURCE_FILES "src/*.cpp")
 
@@ -29,6 +35,16 @@ set_property(TARGET smjni PROPERTY CXX_STANDARD 14)
 set_property(TARGET smjni PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjni PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjni PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-target_include_directories(smjni PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        ${JNI_INCLUDE_DIRS})
+
+target_compile_options(smjni 
+    PUBLIC 
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++17-compat-mangling>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++17-compat-mangling>
+)
+
+target_include_directories(smjni 
+
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    ${JNI_INCLUDE_DIRS}
+)

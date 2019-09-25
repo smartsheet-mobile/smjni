@@ -83,17 +83,17 @@ namespace smjni
         {
         }
         
-        return_type get(JNIEnv * jenv, ThisType object) const
+        return_type get(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object) const
         {
-            Type ret = traits::get_field(jenv, object, this->m_id);
+            Type ret = traits::get_field(jenv, argument_to_java(object), this->m_id);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
         
-        void set(JNIEnv * jenv, ThisType object, Type val) const
+        void set(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, typename java_type_traits<Type>::arg_type val) const
         {
-            traits::set_field(jenv, object, this->m_id, val);
+            traits::set_field(jenv, argument_to_java(object), this->m_id, argument_to_java(val));
             java_exception::check(jenv);
         }
     };
@@ -121,12 +121,12 @@ namespace smjni
             Type ret = traits::get_static_field(jenv, this->m_holder->c_ptr(), this->m_id);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
         
-        void set(JNIEnv * jenv, Type val) const
+        void set(JNIEnv * jenv, typename java_type_traits<Type>::arg_type val) const
         {
-            java_type_traits<Type>::set_static_field(jenv, this->m_holder->c_ptr(), this->m_id, val);
+            java_type_traits<Type>::set_static_field(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(val));
             java_exception::check(jenv);
         }
     private:

@@ -20,13 +20,49 @@
 #include <string>
 
 #include <smjni/java_ref.h>
+#include <smjni/java_types.h>
 
 namespace smjni
 {
 
+    template<typename T> [[gnu::always_inline]] inline constexpr T argument_to_java(T val) 
+        { return val; }
+    template<typename T> [[gnu::always_inline]] inline T argument_to_java(const auto_java_ref<T> & val)
+        { return val.c_ptr(); }
+
+    template<typename T> [[gnu::always_inline]] inline constexpr T return_value_from_java(JNIEnv *, T val)
+        { return val; }
+    template<typename T> [[gnu::always_inline]] inline local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val)
+        { return jattach(env, val); }
+
+
+    inline std::string object_signature_from_name(const char * name)
+    {
+        std::string ret = "L";
+        for(const char * p = name; *p; ++p) 
+            ret += (*p != '.' ? *p : '/'); 
+        ret += ';';
+        return ret;
+    }
+
+    inline std::string array_signature_from_name(const char * name)
+    {
+        std::string ret = "[L";
+        for(const char * p = name; *p; ++p) 
+            ret += (*p != '.' ? *p : '/'); 
+        ret += ';';
+        return ret;
+    }
+    
+
     template<typename T>
     class java_type_traits;
 
+    template<typename T>
+    class java_array_type_of;
+
+    template<typename T>
+    using java_array_type_of_t = typename java_array_type_of<T>::type;
 
     template<>
     class java_type_traits<void>
@@ -77,6 +113,7 @@ namespace smjni
         { \
         public: \
             typedef jtype return_type; \
+            typedef jtype arg_type; \
             \
             java_type_traits() = delete; \
             java_type_traits(const java_type_traits &) = delete; \
@@ -135,10 +172,6 @@ namespace smjni
             {\
                return jenv->New##name##Array(size);\
             }\
-            static return_type make_return_type(JNIEnv * jenv, jtype val)\
-            {\
-                return val;\
-            }\
         };\
     }
 
@@ -160,6 +193,7 @@ namespace smjni
     {
     public:
         typedef local_java_ref<T> return_type;
+        typedef const auto_java_ref<T> & arg_type; 
 
         java_object_type_base() = delete;
         java_object_type_base(const java_object_type_base &) = delete;
@@ -222,40 +256,6 @@ namespace smjni
             va_end(vl);
             return ret;
         }
-
-        static return_type make_return_type(JNIEnv * jenv, T obj)
-        {
-            return jattach(jenv, obj);
-        }
-    };
-
-    template<typename T>
-    class java_scalar_object_type_base : public java_object_type_base<T>
-    {
-    public:
-        static std::string signature_from_name(const char * name)
-        {
-            std::string ret = "L";
-            for(const char * p = name; *p; ++p) 
-                ret += (*p != '.' ? *p : '/'); 
-            ret += ';';
-            return ret;
-        }
-
-    };
-
-    template<typename T>
-    class java_array_object_type_base : public java_object_type_base<T>
-    {
-    public:
-        static std::string signature_from_name(const char * name)
-        {
-            std::string ret = "[L";
-            for(const char * p = name; *p; ++p) 
-                ret += (*p != '.' ? *p : '/'); 
-            ret += ';';
-            return ret;
-        }
     };
 }
 
@@ -263,12 +263,13 @@ namespace smjni
     namespace smjni\
     {\
         template<> \
-        class java_type_traits<jtype> : public java_scalar_object_type_base<jtype> \
+        class java_type_traits<jtype> : public java_object_type_base<jtype> \
         {\
         public:\
-            static std::string signature()\
+            static const std::string & signature()\
             {\
-                return signature_from_name(name);\
+                static const auto the_signature = object_signature_from_name(name);\
+                return the_signature;\
             }\
             \
             static const char * class_name() \
@@ -287,7 +288,7 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
     namespace smjni \
     {\
         template<> \
-        class java_type_traits<jtype##Array> : public java_array_object_type_base<jtype##Array> \
+        class java_type_traits<jtype##Array> : public java_object_type_base<jtype##Array> \
         {\
         public:\
             typedef jtype element_type;\
@@ -296,7 +297,6 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
             {\
                 return sig;\
             }\
-            \
             static void release_array_elements(JNIEnv * env, jtype##Array ar, jtype * data, jint flags)\
             {\
                 env->Release##name##ArrayElements(ar, data, flags);\
@@ -305,6 +305,11 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
             {\
                 return env->Get##name##ArrayElements(ar, copied);\
             }\
+        };\
+        template<>\
+        class java_array_type_of<jtype>\
+        {\
+            public: typedef jtype##Array type;\
         };\
     }
 
@@ -323,15 +328,21 @@ HANDLE_PRIMITIVE_ARRAY_JAVA_TYPE(jdouble,     Double,     "[D");
     namespace smjni \
     {\
         template<> \
-        class java_type_traits<jtype##Array> : public java_array_object_type_base<jtype##Array> \
+        class java_type_traits<jtype##Array> : public java_object_type_base<jtype##Array> \
         {\
         public:\
             typedef jtype element_type;\
             \
-            static std::string signature()\
+            static const std::string & signature()\
             {\
-                return signature_from_name(java_type_traits<jtype>::class_name());\
+                static const auto the_signature = array_signature_from_name(java_type_traits<jtype>::class_name());\
+                return the_signature;\
             }\
+        };\
+        template<>\
+        class java_array_type_of<jtype>\
+        {\
+            public: typedef jtype##Array type;\
         };\
     }
 

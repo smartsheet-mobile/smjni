@@ -38,15 +38,15 @@ namespace smjni
         {
         }
             
-        java_direct_buffer(JNIEnv * env, jobject obj)
+        java_direct_buffer(JNIEnv * env, const auto_java_ref<jobject> & obj)
         {
-            m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj));
+            m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj.c_ptr()));
             if (!m_ptr)
             {
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            jsize byte_size = env->GetDirectBufferCapacity(obj);
+            jsize byte_size = env->GetDirectBufferCapacity(obj.c_ptr());
             if (byte_size == -1)
             {
                 java_exception::check(env); 

@@ -83,21 +83,25 @@ namespace smjni
         {
         }
         
-        return_type operator()(JNIEnv * jenv, ThisType object, ArgType... params) const
+        return_type operator()(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, 
+                               typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_method(jenv, object, this->m_id, params...);
+            ReturnType ret = traits::call_method(jenv, argument_to_java(object), this->m_id, argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
         
         template<typename ClassType>
-        return_type call_non_virtual(JNIEnv * jenv, ThisType object, const java_class<ClassType> & clazz, ArgType... params) const
+        return_type call_non_virtual(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, const java_class<ClassType> & clazz, 
+                                     typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_non_virtual_method(jenv, object, clazz.c_ptr(), this->m_id,  params...);
+            ReturnType ret = traits::call_non_virtual_method(jenv, argument_to_java(object), 
+                                                             clazz.c_ptr(), this->m_id,  
+                                                             argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
     };
     
@@ -115,16 +119,18 @@ namespace smjni
         {
         }
         
-        void operator()(JNIEnv * jenv, ThisType object, ArgType... params) const
+        void operator()(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, 
+                        typename java_type_traits<ArgType>::arg_type... params) const
         {
-            traits::call_method(jenv, object, this->m_id, params...);
+            traits::call_method(jenv, argument_to_java(object), this->m_id, argument_to_java(params)...);
             java_exception::check(jenv);
         }
         
         template<typename ClassType>
-        void call_non_virtual(JNIEnv * jenv, ThisType object, const java_class<ClassType> & clazz, ArgType... params) const
+        void call_non_virtual(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, const java_class<ClassType> & clazz, 
+                              typename java_type_traits<ArgType>::arg_type... params) const
         {
-            traits::call_non_virtual_method(jenv, object, clazz.c_ptr(), this->m_id,  params...);
+            traits::call_non_virtual_method(jenv, argument_to_java(object), clazz.c_ptr(), this->m_id, argument_to_java(params)...);
             java_exception::check(jenv);
         }
     };
@@ -145,12 +151,12 @@ namespace smjni
         {
         }
         
-        return_type operator()(JNIEnv * jenv, ArgType... params) const
+        return_type operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, params...);
+            ReturnType ret = traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
     private:
         std::shared_ptr<java_class_holder> m_holder;
@@ -172,9 +178,9 @@ namespace smjni
         {
         }
         
-        void operator()(JNIEnv * jenv, ArgType... params) const
+        void operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
         {
-            traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, params...);
+            traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
             java_exception::check(jenv);
         }
     private:
@@ -196,12 +202,12 @@ namespace smjni
         {
         }
         
-        return_type operator()(JNIEnv * jenv, ArgType... params) const
+        return_type operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::new_object(jenv, this->m_holder->c_ptr(), this->m_id, params...);
+            ReturnType ret = traits::new_object(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
-            return traits::make_return_type(jenv, ret);
+            return return_value_from_java(jenv, ret);
         }
     private:
         std::shared_ptr<java_class_holder> m_holder;

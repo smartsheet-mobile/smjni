@@ -50,6 +50,11 @@ namespace smjni
             traits(nullptr),
             m_obj(nullptr)
         {}
+
+        java_ref(nullptr_t) noexcept:
+            traits(nullptr),
+            m_obj(nullptr)
+        {}
         
         template<typename X>
         java_ref(X * ptr, typename std::enable_if<Traits::allow_conversion, X *>::type = nullptr):

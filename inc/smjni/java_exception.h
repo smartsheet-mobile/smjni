@@ -57,9 +57,9 @@ namespace smjni
             }
         }
         
-        static void raise(JNIEnv * jenv, jthrowable jex)
+        static void raise(JNIEnv * jenv, const auto_java_ref<jthrowable> & jex)
         {
-            jint res = jenv->Throw(jex);
+            jint res = jenv->Throw(jex.c_ptr());
             if (res != 0)
                 THROW_JAVA_PROBLEM("Cannot throw java exception");
         }

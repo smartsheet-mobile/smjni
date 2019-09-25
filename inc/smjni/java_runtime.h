@@ -79,9 +79,9 @@ namespace smjni
         }
         
         template<typename T> 
-        static jclass find_class(JNIEnv * env)
+        static local_java_ref<jclass> find_class(JNIEnv * env)
         {
-            jclass ret = java_class<T>::find(env);
+            auto ret = java_class<T>::find(env);
             if (!ret)
             {
                 java_exception::check(env);
@@ -95,9 +95,9 @@ namespace smjni
         java_runtime(JNIEnv * jenv);
             
         template<typename T> 
-        static jclass find_core_class(JNIEnv * env)
+        static local_java_ref<jclass> find_core_class(JNIEnv * env)
         {
-            jclass ret = java_class<T>::find(env);
+            auto ret = java_class<T>::find(env);
             if (!ret)
                 THROW_JAVA_PROBLEM("failed to locate %s", java_type_traits<T>::class_name());
             return ret;

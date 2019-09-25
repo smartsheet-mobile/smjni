@@ -49,11 +49,11 @@ std::string java_exception::do_what() const
     auto message = java_runtime::object().toString(jenv, m_throwable.c_ptr());
     if (!message)
         return ret;
-    jsize len = java_string::get_length(jenv, message.c_ptr());
+    jsize len = java_string_get_length(jenv, message);
     if (!len)
         return ret;
     std::vector<jchar> buf(len);
-    java_string::get_region(jenv, message.c_ptr(), 0, len, &buf[0]);
+    java_string_get_region(jenv, message, 0, len, &buf[0]);
     ret += ": ";
     utf16_to_utf8(buf.begin(), buf.end(), std::back_inserter(ret));
     return ret;
@@ -62,7 +62,7 @@ std::string java_exception::do_what() const
 void java_exception::translate(JNIEnv * env, const std::exception & ex)
 {
     const char * message = ex.what();
-    auto java_message = java_string::create(env, message);
-    auto exception = java_runtime::throwable().ctor(env, java_message.c_ptr());
-    java_exception::raise(env, exception.c_ptr());
+    auto java_message = java_string_create(env, message);
+    auto exception = java_runtime::throwable().ctor(env, java_message);
+    java_exception::raise(env, exception);
 }
