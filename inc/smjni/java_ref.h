@@ -51,7 +51,7 @@ namespace smjni
             m_obj(nullptr)
         {}
 
-        java_ref(nullptr_t) noexcept:
+        java_ref(std::nullptr_t) noexcept:
             traits(nullptr),
             m_obj(nullptr)
         {}
