@@ -27,8 +27,8 @@ namespace smjni
     class java_exception final : public std::exception
     {
     public:
-        java_exception(jthrowable ex) noexcept :
-            m_throwable(jglobal_ref(ex))
+        java_exception(const auto_java_ref<jthrowable> & ex) noexcept :
+            m_throwable(ex)
         {
             
         }

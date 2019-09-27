@@ -51,12 +51,14 @@ namespace smjni
     template<typename T, bool IsObject = std::is_convertible<typename java_type_traits<T>::element_type, jobject>::value>
     class java_array_access;
     
+#if __cplusplus >= 201703L
     template<typename T, bool IsObject = std::is_convertible<typename java_type_traits<T>::element_type, jobject>::value> 
     java_array_access(JNIEnv * env, T array) -> java_array_access<T, IsObject>;
 
     template<typename T, typename Traits, bool IsObject = std::is_convertible<typename java_type_traits<T>::element_type, jobject>::value> 
     java_array_access(JNIEnv * env, const java_ref<T, Traits> & array) -> java_array_access<T, IsObject>;
-    
+#endif
+
     template<typename T>
     class java_array_access<T, /*is_object*/ true> : public java_array_access_base<T>
     {
@@ -419,7 +421,7 @@ namespace smjni
     local_java_ref<java_array_type_of_t<T>>> java_array_create(JNIEnv * env, RanIt first, RanIt last)
     {
         auto res = java_array_create<T>(env, last - first);
-        java_array_access res_access(env, res.c_ptr());
+        java_array_access<T> res_access(env, res.c_ptr());
         std::copy(first, last, res_access.begin());
         res_access.commit(env);
         return res;
