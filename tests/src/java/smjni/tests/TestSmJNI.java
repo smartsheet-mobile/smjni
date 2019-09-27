@@ -3,8 +3,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.nio.ByteBuffer;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TestSmJNI {
 
@@ -16,7 +17,7 @@ class TestSmJNI {
 
     @Test
     void testNativeMethodImplementation() {
-        assertTrue(nativeMethod(true,
+        assertTrue(doTestNativeMethodImplementation(true,
                      (byte)42,
                      'q',
                      (short)17,
@@ -37,7 +38,7 @@ class TestSmJNI {
                 ));
     }
 
-    private native boolean nativeMethod(boolean bl, byte b, char c, short s, int i, long l, float f, double d, String str,
+    private native boolean doTestNativeMethodImplementation(boolean bl, byte b, char c, short s, int i, long l, float f, double d, String str,
                                      boolean[] bla, byte[] ba, char[] ca, short[] sa, int[] ia, long[] la, float[] fa, double[] da, String[] stra);
 
     @Test
@@ -63,4 +64,24 @@ class TestSmJNI {
     }
 
     private native String[] doTestObjectArray(String[] array);
+
+    @Test
+    void testDirectBuffer()
+    {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(5);
+        buffer.put((byte)1);
+        buffer.put((byte)2);
+        buffer.put((byte)3);
+        buffer.put((byte)4);
+        buffer.put((byte)5);
+        ByteBuffer res = doTestDirectBuffer(buffer);
+        for(int i = 0; i < 5; ++i)
+            assertEquals(5 - i, buffer.get(i));
+        assertNotNull(res);
+        assertEquals(2, res.capacity());
+        for(int i = 0; i < 2; ++i)
+            assertEquals(i + 1, res.get(i));
+    }
+
+    private native ByteBuffer doTestDirectBuffer(ByteBuffer buffer);
 }

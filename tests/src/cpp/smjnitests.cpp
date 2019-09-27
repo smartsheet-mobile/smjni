@@ -52,21 +52,22 @@ public:
         simple_java_class(env)
     {}
 
-    static jboolean JNICALL nativeMethod(JNIEnv *, jTestSmJNI, jboolean, jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jstring,
+    static jboolean JNICALL doTestNativeMethodImplementation(JNIEnv *, jTestSmJNI, jboolean, jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jstring,
                 jbooleanArray, jbyteArray, jcharArray, jshortArray, jintArray, jlongArray, jfloatArray, jdoubleArray, jstringArray);
-
     static void JNICALL testString(JNIEnv * env, jTestSmJNI self);
     static jcharArray JNICALL doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self, jintArray array);
     static jstringArray JNICALL doTestObjectArray(JNIEnv * env, jTestSmJNI self, jstringArray array);
+    static jByteBuffer JNICALL doTestDirectBuffer(JNIEnv * env, jTestSmJNI self, jByteBuffer buffer);
 
     void register_methods(JNIEnv * env) const
     {
         java_registration<jTestSmJNI> registration;
 
-        registration.add_instance_method("nativeMethod", nativeMethod);
+        registration.add_instance_method("doTestNativeMethodImplementation", doTestNativeMethodImplementation);
         registration.add_instance_method("testString", testString);
         registration.add_instance_method("doTestPrimitiveArray", doTestPrimitiveArray);
         registration.add_instance_method("doTestObjectArray", doTestObjectArray);
+        registration.add_instance_method("doTestDirectBuffer", doTestDirectBuffer);
 
         registration.perform(env, *this);
     }
@@ -99,7 +100,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
     return 0;
 }
 
-jboolean JNICALL TestSmJNI::nativeMethod(JNIEnv * env, jTestSmJNI, jboolean bl, jbyte b, jchar c, jshort s, jint i, jlong l, jfloat f, jdouble d, jstring str,
+jboolean JNICALL TestSmJNI::doTestNativeMethodImplementation(JNIEnv * env, jTestSmJNI, jboolean bl, jbyte b, jchar c, jshort s, jint i, jlong l, jfloat f, jdouble d, jstring str,
                                      jbooleanArray bla, jbyteArray ba, jcharArray ca, jshortArray sa, jintArray ia, jlongArray la, jfloatArray fa, jdoubleArray da, jstringArray stra)
 {
     NATIVE_PROLOG
@@ -264,6 +265,26 @@ jstringArray JNICALL TestSmJNI::doTestObjectArray(JNIEnv * env, jTestSmJNI self,
                                     java_string_create(env, "a"));
 
        return ret.release();
+
+    NATIVE_EPILOG
+    return nullptr;
+}
+
+jByteBuffer JNICALL TestSmJNI::doTestDirectBuffer(JNIEnv * env, jTestSmJNI self, jByteBuffer buffer)
+{
+    NATIVE_PROLOG
+
+        java_direct_buffer<uint8_t> buf(env, buffer);
+        auto expected = {1, 2, 3, 4, 5};
+        ASSERT_EQUAL(5, buf.size());
+        for(int i = 0; i < 5; ++i)
+            ASSERT_EQUAL(i + 1, buf[i]);
+        ASSERT_TRUE(std::equal(buf.begin(), buf.end(), expected.begin(), expected.end()));
+        std::reverse(buf.begin(), buf.end());
+
+        static uint8_t bytes[] = { 1, 2 }; //this must exist forever
+        java_direct_buffer<uint8_t> ret(bytes, std::size(bytes));
+        return ret.to_java(env).release();
 
     NATIVE_EPILOG
     return nullptr;

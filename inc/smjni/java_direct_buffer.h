@@ -20,6 +20,7 @@
 #include <smjni/java_ref.h>
 #include <smjni/java_exception.h>
 
+DEFINE_JAVA_TYPE(jByteBuffer, "java.nio.ByteBuffer")
 
 namespace smjni
 {
@@ -38,7 +39,7 @@ namespace smjni
         {
         }
             
-        java_direct_buffer(JNIEnv * env, const auto_java_ref<jobject> & obj)
+        java_direct_buffer(JNIEnv * env, const auto_java_ref<jByteBuffer> & obj)
         {
             m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj.c_ptr()));
             if (!m_ptr)
@@ -55,7 +56,7 @@ namespace smjni
             m_size = byte_size / sizeof(T);
         }
         
-        local_java_ref<jobject> to_java(JNIEnv * env)
+        local_java_ref<jByteBuffer> to_java(JNIEnv * env)
         {
             jobject ret = env->NewDirectByteBuffer(m_ptr, m_size * sizeof(T));
             if (!ret)
