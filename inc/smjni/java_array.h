@@ -421,7 +421,7 @@ namespace smjni
     local_java_ref<java_array_type_of_t<T>>> java_array_create(JNIEnv * env, RanIt first, RanIt last)
     {
         auto res = java_array_create<T>(env, last - first);
-        java_array_access<T> res_access(env, res.c_ptr());
+        java_array_access<java_array_type_of_t<T>> res_access(env, res.c_ptr());
         std::copy(first, last, res_access.begin());
         res_access.commit(env);
         return res;
