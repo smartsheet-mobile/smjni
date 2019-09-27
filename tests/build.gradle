@@ -1,0 +1,47 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+apply plugin: 'java'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.0'
+}
+
+test {
+    useJUnitPlatform()
+
+    systemProperty("java.library.path",
+            System.getProperty("java.library.path") + File.pathSeparator + file("../build/tests/src/cpp"))
+}
+
+sourceSets {
+    test.java.srcDirs = ['src/java']
+}
+
+task buildNative {
+
+    project.exec {
+        commandLine = [
+                "cmake", "-S", projectDir.parent, "-B", file("../build").toString()
+        ]
+    }
+    project.exec {
+        commandLine = [
+                "cmake", "--build", file("../build").toString(), "--config", "Debug", "--target", "smjnitests"
+        ]
+    }
+}
+
+project.tasks.test.dependsOn(buildNative)

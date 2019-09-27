@@ -1,4 +1,6 @@
 .DS_Store
 
-/.vscode/
-/build/
+.vscode/
+.idea/
+.gradle/
+build/

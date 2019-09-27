@@ -1,0 +1,171 @@
+#include <smjni/smjni.h>
+
+using namespace smjni;
+
+#define CONCAT_TOKEN(foo, bar) CONCAT_TOKEN_IMPL(foo, bar)
+#define CONCAT_TOKEN_IMPL(foo, bar) foo ## bar
+#define STRINGIFY(name) STRINGIFY_IMPL(name)
+#define STRINGIFY_IMPL(name) #name
+
+#define THROW_ASSERTION_FAILURE(message) throw java_exception(java_classes::get<AssertionError>().ctor(env, java_string_create(env, message " at " __FILE__ ":" STRINGIFY(__LINE__))))
+
+#define ASSERT_TRUE(x) if (!(x)) \
+    THROW_ASSERTION_FAILURE(STRINGIFY(x) " is false, expected true")
+#define ASSERT_FALSE(x) if (x) \
+    THROW_ASSERTION_FAILURE(STRINGIFY(x) " is true, expected false")
+#define ASSERT_EQUAL(expected, actual) if ((expected) != (actual)) \
+    THROW_ASSERTION_FAILURE(STRINGIFY(expected) " != " STRINGIFY(actual));
+
+#define NATIVE_PROLOG  try {
+#define NATIVE_EPILOG  } \
+                       catch(java_exception & ex) \
+                       { \
+                           ex.raise(env);\
+                       }\
+                       catch(std::exception & ex)\
+                       {\
+                           java_exception::translate(env, ex);\
+                       }
+
+DEFINE_JAVA_TYPE(jTestSmJNI, "smjni.tests.TestSmJNI")
+DEFINE_JAVA_TYPE(jAssertionError, "java.lang.AssertionError")
+
+DEFINE_JAVA_CONVERSION(jthrowable, jAssertionError);
+
+DEFINE_ARRAY_JAVA_TYPE(jstring)
+
+class AssertionError : public smjni::java_runtime::simple_java_class<jAssertionError>
+{
+public:
+    AssertionError(JNIEnv * env):
+        simple_java_class(env),
+        ctor(env, *this)
+    {}
+
+    java_constructor<jAssertionError, jstring> ctor;
+};
+
+class TestSmJNI : public smjni::java_runtime::simple_java_class<jTestSmJNI>
+{
+public:
+    TestSmJNI(JNIEnv * env):
+        simple_java_class(env)
+    {}
+
+    static jboolean JNICALL nativeMethod(JNIEnv *, jTestSmJNI, jboolean, jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jstring,
+                jbooleanArray, jbyteArray, jcharArray, jshortArray, jintArray, jlongArray, jfloatArray, jdoubleArray, jstringArray);
+
+    void register_methods(JNIEnv * env) const
+    {
+        java_registration<jTestSmJNI> registration;
+
+        registration.add_instance_method("nativeMethod", nativeMethod);
+
+        registration.perform(env, *this);
+    }
+};
+
+typedef smjni::java_class_table<AssertionError, TestSmJNI> java_classes;
+
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+    try
+    {
+        jni_provider::init(vm);
+        JNIEnv * env = jni_provider::get_jni();
+        java_runtime::init(env);
+
+        NATIVE_PROLOG
+            java_classes::init(env);
+
+            return JNI_VERSION_1_6;
+        NATIVE_EPILOG
+    }
+    catch(std::exception & ex)
+    {
+        //If we are here there is no way to communicate with
+        //Java - something really bad happened.
+        //Let's just log and report failure
+        fprintf(stderr, "%s\n", ex.what());
+
+    }
+    return 0;
+}
+
+jboolean JNICALL TestSmJNI::nativeMethod(JNIEnv * env, jTestSmJNI, jboolean bl, jbyte b, jchar c, jshort s, jint i, jlong l, jfloat f, jdouble d, jstring str,
+                                     jbooleanArray bla, jbyteArray ba, jcharArray ca, jshortArray sa, jintArray ia, jlongArray la, jfloatArray fa, jdoubleArray da, jstringArray stra)
+{
+    NATIVE_PROLOG
+        ASSERT_TRUE(bl);
+        ASSERT_EQUAL(42, b);
+        ASSERT_EQUAL(u'q', c);
+        ASSERT_EQUAL(17, s);
+        ASSERT_EQUAL(64, i);
+        ASSERT_EQUAL(59, l);
+        ASSERT_EQUAL(0.42f, f);
+        ASSERT_EQUAL(0.756, d);
+
+        auto cppstr = java_string_to_cpp(env, str);
+        ASSERT_EQUAL("hello👶🏻", cppstr);
+
+        {
+            java_array_access access(env, bla);
+            auto expected = { java_true, java_false };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, ba);
+            auto expected = { 3, 4 };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, ca);
+            auto expected = { u'm', u'p' };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, sa);
+            auto expected = { 9, 10 };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, ia);
+            auto expected = { 545, 212 };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, la);
+            auto expected = { -1, -3 };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, fa);
+            auto expected = { 0.1f, 0.2f };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, da);
+            auto expected = { 0.25, 0.26 };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
+        }
+
+        {
+            java_array_access access(env, stra);
+            auto expected = { "abc" , "xyz" };
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end(), [env] (const auto & lhs, const auto & rhs) {
+                return rhs == java_string_to_cpp(env, local_java_ref<jstring>(lhs));
+            }));
+        }
+
+        return java_true;
+
+    NATIVE_EPILOG
+    return java_false;
+}

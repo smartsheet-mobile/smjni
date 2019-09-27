@@ -48,3 +48,5 @@ target_include_directories(smjni
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${JNI_INCLUDE_DIRS}
 )
+
+add_subdirectory(tests/src/cpp)

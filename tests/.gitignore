@@ -1,5 +1,4 @@
-sample/
 /local.properties
 /gradle.properties
 /gradle/wrapper/gradle-wrapper.jar
-/jnigen.iml
+
