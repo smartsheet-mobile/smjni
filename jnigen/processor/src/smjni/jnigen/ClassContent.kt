@@ -33,6 +33,7 @@ internal enum class JavaEntityType {
 
 internal class JavaEntity(val type: JavaEntityType,
                           val isFinal: Boolean,
+                          val allowNonVirt: Boolean,
                           var name: UniqueName,
                           val templateArguments: List<String>,
                           val returnType: String,
@@ -69,11 +70,21 @@ internal class ClassContent(val classElement: TypeElement,
                     if (childElement.modifiers.contains(Modifier.NATIVE))
                         addNativeMethod(methodElement, previousNativeNameUsers, typeMap)
 
-                    if (childElement.annotationMirrors.any {
+                    val annotation = childElement.annotationMirrors.find {
                         val annotationType = it.annotationType.asElement() as TypeElement
                         annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
-                    }) {
-                        addJavaMethod(methodElement, names, typeMap)
+                    }
+                    if (annotation != null) {
+                        var allowNonVirt = false
+                        for((name, value) in ctxt.elementUtils.getElementValuesWithDefaults(annotation)) {
+
+                            when {
+                                name.simpleName.contentEquals("allowNonVirtualCall") -> allowNonVirt = value.value as Boolean
+                            }
+                        }
+
+                        addJavaMethod(methodElement, allowNonVirt, names, typeMap)
+
                     }
                 }
                 ElementKind.FIELD -> {
@@ -149,6 +160,7 @@ internal class ClassContent(val classElement: TypeElement,
     }
 
     private fun addJavaMethod(methodElement: ExecutableElement,
+                              allowNonVirt: Boolean,
                               names: NameTable,
                               typeMap: TypeMap) {
 
@@ -175,6 +187,7 @@ internal class ClassContent(val classElement: TypeElement,
         }
         val method = JavaEntity(if (isStatic) JavaEntityType.StaticMethod else JavaEntityType.Method,
                 methodElement.modifiers.contains(Modifier.FINAL),
+                if (isStatic) false else allowNonVirt,
                 methodName, templateArguments, returnType, argTypes, argNames)
         m_javaEntities.add(method)
     }
@@ -201,6 +214,7 @@ internal class ClassContent(val classElement: TypeElement,
 
         val field = JavaEntity(if (isStatic) JavaEntityType.StaticField else JavaEntityType.Field,
                 fieldElement.modifiers.contains(Modifier.FINAL),
+                false,
                 fieldName, templateArguments, returnType, argTypes, argNames)
         m_javaEntities.add(field)
     }
@@ -222,7 +236,7 @@ internal class ClassContent(val classElement: TypeElement,
             argNames.add(param.simpleName.toString())
         }
 
-        val ctor = JavaEntity(JavaEntityType.Constructor, false, name, templateArguments, returnType, argTypes, argNames)
+        val ctor = JavaEntity(JavaEntityType.Constructor, false, false, name, templateArguments, returnType, argTypes, argNames)
         m_javaEntities.add(ctor)
     }
 

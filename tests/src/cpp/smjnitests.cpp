@@ -278,6 +278,6 @@ void JNICALL TestSmJNI::testCallingJava(JNIEnv * env, jTestSmJNI self)
 
         ASSERT_EQUAL(5, base_class.instanceMethod(env, derived, 3));
 
-        //ASSERT_EQUAL(4, base_class.instanceMethod.call_non_virtual(env, derived, base_class, 3));
+        ASSERT_EQUAL(4, base_class.instanceMethod(env, derived, base_class, 3));
     NATIVE_EPILOG
 }

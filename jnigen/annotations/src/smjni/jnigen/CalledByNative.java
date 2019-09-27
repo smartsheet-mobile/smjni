@@ -25,4 +25,5 @@ import static java.lang.annotation.ElementType.METHOD;
 @Retention(RetentionPolicy.CLASS)
 public @interface CalledByNative
 {
+    boolean allowNonVirtualCall() default false;
 }

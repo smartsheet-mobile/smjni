@@ -136,6 +136,8 @@ internal class Generator {
             val argNameTable = NameTable()
             val argNames = ArrayList<UniqueName>()
             argNames.add(argNameTable.allocateName("env"))
+            if (javaEntity.allowNonVirt)
+                argNameTable.allocateName("classForNonVirtualCall")
             javaEntity.argNames.mapTo(argNames) { argNameTable.allocateName(it) }
 
             when(javaEntity.type) {
@@ -153,6 +155,24 @@ internal class Generator {
                         classHeader.write(", ${argNames[i]}")
                     }
                     classHeader.write("); }\n")
+
+                    if (javaEntity.allowNonVirt) {
+                        classHeader.write("    template<typename ClassType> ${javaEntity.returnType} ${javaEntity.name}(JNIEnv * env")
+                        classHeader.write(", ${javaEntity.argTypes[0]} ${argNames[1]}")
+                        classHeader.write(", const java_class<ClassType> & classForNonVirtualCall")
+                        for (i in 2 until javaEntity.templateArguments.size) {
+                            classHeader.write(", ${javaEntity.argTypes[i - 1]} ${argNames[i]}")
+                        }
+                        classHeader.write(") const\n        { ")
+                        if (javaEntity.returnType != "void")
+                            classHeader.write("return ")
+                        classHeader.write("$memberName.call_non_virtual(env")
+                        classHeader.write(", ${argNames[1]}, classForNonVirtualCall")
+                        for (i in 2 until javaEntity.templateArguments.size) {
+                            classHeader.write(", ${argNames[i]}")
+                        }
+                        classHeader.write("); }\n")
+                    }
                 }
                 JavaEntityType.Field, JavaEntityType.StaticField -> {
 

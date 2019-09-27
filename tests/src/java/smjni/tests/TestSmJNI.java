@@ -26,7 +26,7 @@ class TestSmJNI {
             return val;
         }
 
-        @CalledByNative
+        @CalledByNative(allowNonVirtualCall = true)
         int instanceMethod(int val)
         {
             return val + 1;
