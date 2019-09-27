@@ -27,10 +27,13 @@ using namespace smjni;
                            java_exception::translate(env, ex);\
                        }
 
-DEFINE_JAVA_TYPE(jTestSmJNI, "smjni.tests.TestSmJNI")
 DEFINE_JAVA_TYPE(jAssertionError, "java.lang.AssertionError")
+DEFINE_JAVA_TYPE(jTestSmJNI, "smjni.tests.TestSmJNI")
+DEFINE_JAVA_TYPE(jBase, "smjni.tests.TestSmJNI$Base")
+DEFINE_JAVA_TYPE(jDerived, "smjni.tests.TestSmJNI$Derived")
 
 DEFINE_JAVA_CONVERSION(jthrowable, jAssertionError);
+DEFINE_JAVA_CONVERSION(jBase, jDerived);
 
 DEFINE_ARRAY_JAVA_TYPE(jstring)
 
@@ -43,6 +46,34 @@ public:
     {}
 
     java_constructor<jAssertionError, jstring> ctor;
+};
+
+class Base : public smjni::java_runtime::simple_java_class<jBase>
+{
+public:
+    Base(JNIEnv * env):
+        simple_java_class(env),
+        staticMethod(env, *this, "staticMethod"),
+        instanceMethod(env, *this, "instanceMethod"),
+        value(env, *this, "value"),
+        staticValue(env, *this, "staticValue")
+    {}
+
+    java_static_method<jint, jint> staticMethod;
+    java_method<jint, jBase, jint> instanceMethod;
+    java_field<jint, jBase> value;
+    java_static_field<jint> staticValue;
+};
+
+class Derived : public smjni::java_runtime::simple_java_class<jDerived>
+{
+public:
+    Derived(JNIEnv * env):
+        simple_java_class(env),
+        ctor(env, *this)
+    {}
+
+    java_constructor<jDerived, jint> ctor;
 };
 
 class TestSmJNI : public smjni::java_runtime::simple_java_class<jTestSmJNI>
@@ -58,6 +89,7 @@ public:
     static jcharArray JNICALL doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self, jintArray array);
     static jstringArray JNICALL doTestObjectArray(JNIEnv * env, jTestSmJNI self, jstringArray array);
     static jByteBuffer JNICALL doTestDirectBuffer(JNIEnv * env, jTestSmJNI self, jByteBuffer buffer);
+    static void JNICALL testCallingJava(JNIEnv * env, jTestSmJNI self);
 
     void register_methods(JNIEnv * env) const
     {
@@ -68,12 +100,13 @@ public:
         registration.add_instance_method("doTestPrimitiveArray", doTestPrimitiveArray);
         registration.add_instance_method("doTestObjectArray", doTestObjectArray);
         registration.add_instance_method("doTestDirectBuffer", doTestDirectBuffer);
+        registration.add_instance_method("testCallingJava", testCallingJava);
 
         registration.perform(env, *this);
     }
 };
 
-typedef smjni::java_class_table<AssertionError, TestSmJNI> java_classes;
+typedef smjni::java_class_table<AssertionError, TestSmJNI, Base, Derived> java_classes;
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -261,8 +294,8 @@ jstringArray JNICALL TestSmJNI::doTestObjectArray(JNIEnv * env, jTestSmJNI self,
         }));
 
        std::reverse(access.begin(), access.end());
-       auto ret = java_array_create(env, java_class<jstring>(java_class<jstring>::find(env)), 2,
-                                    java_string_create(env, "a"));
+       auto string_class = java_class<jstring>(env, [] (JNIEnv * env) { return java_runtime::find_class<jstring>(env); });
+       auto ret = java_array_create(env, string_class, 2, java_string_create(env, "a"));
 
        return ret.release();
 
@@ -288,4 +321,28 @@ jByteBuffer JNICALL TestSmJNI::doTestDirectBuffer(JNIEnv * env, jTestSmJNI self,
 
     NATIVE_EPILOG
     return nullptr;
+}
+
+void JNICALL TestSmJNI::testCallingJava(JNIEnv * env, jTestSmJNI self)
+{
+    NATIVE_PROLOG
+        auto derived_class = java_classes::get<Derived>();
+        auto base_class = java_classes::get<Base>();
+
+        auto derived = derived_class.ctor(env, 42);
+
+        ASSERT_EQUAL(42, base_class.value.get(env, derived));
+        base_class.value.set(env, derived, -42);
+        ASSERT_EQUAL(-42, base_class.value.get(env, derived));
+
+        ASSERT_EQUAL(15, base_class.staticValue.get(env));
+        base_class.staticValue.set(env, -15);
+        ASSERT_EQUAL(-15, base_class.staticValue.get(env));
+
+        ASSERT_EQUAL(74, base_class.staticMethod(env, 74));
+
+        ASSERT_EQUAL(5, base_class.instanceMethod(env, derived, 3));
+
+        ASSERT_EQUAL(4, base_class.instanceMethod.call_non_virtual(env, derived, base_class, 3));
+    NATIVE_EPILOG
 }

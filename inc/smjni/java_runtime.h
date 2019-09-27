@@ -81,7 +81,7 @@ namespace smjni
         template<typename T> 
         static local_java_ref<jclass> find_class(JNIEnv * env)
         {
-            auto ret = java_class<T>::find(env);
+            auto ret = do_find<T>(env);
             if (!ret)
             {
                 java_exception::check(env);
@@ -97,11 +97,20 @@ namespace smjni
         template<typename T> 
         static local_java_ref<jclass> find_core_class(JNIEnv * env)
         {
-            auto ret = java_class<T>::find(env);
+            auto ret = do_find<T>(env);
             if (!ret)
                 THROW_JAVA_PROBLEM("failed to locate %s", java_type_traits<T>::class_name());
             return ret;
         }  
+
+        template<typename T> 
+        static local_java_ref<jclass> do_find(JNIEnv * jenv)
+        {
+            std::string name = java_type_traits<T>::class_name();
+            for(char & c: name) 
+                if (c == '.') c ='/';
+            return jattach(jenv, jenv->FindClass(name.c_str()));
+        }
     private:
         const object_class m_object;
         const throwable_class m_throwable;

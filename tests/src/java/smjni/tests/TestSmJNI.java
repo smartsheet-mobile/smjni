@@ -9,6 +9,41 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TestSmJNI {
 
+    static class Base
+    {
+        Base(int val)
+        {
+            value = val;
+        }
+
+        static int staticMethod(int val)
+        {
+            return val;
+        }
+
+        int instanceMethod(int val)
+        {
+            return val + 1;
+        }
+
+        int value;
+        static int staticValue = 15;
+    }
+
+    static class Derived extends Base
+    {
+        public Derived(int val)
+        {
+            super(val);
+        }
+
+        @Override
+        int instanceMethod(int val)
+        {
+            return val + 2;
+        }
+    }
+
     @BeforeAll
     static void setUp()
     {
@@ -84,4 +119,7 @@ class TestSmJNI {
     }
 
     private native ByteBuffer doTestDirectBuffer(ByteBuffer buffer);
+
+    @Test
+    native void testCallingJava();
 }

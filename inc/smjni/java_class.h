@@ -63,14 +63,6 @@ namespace smjni
             m_holder(init(jenv, loader))
         {}
         
-        static local_java_ref<jclass> find(JNIEnv * jenv)
-        {
-            std::string name = java_type_traits<T>::class_name();
-            for(char & c: name) 
-                if (c == '.') c ='/';
-            return jattach(jenv, jenv->FindClass(name.c_str()));
-        }
-
         jclass c_ptr() const
         {
             return m_holder->c_ptr();
