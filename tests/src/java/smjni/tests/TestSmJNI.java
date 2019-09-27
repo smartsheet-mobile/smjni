@@ -1,14 +1,18 @@
 package smjni.tests;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import smjni.jnigen.CalledByNative;
+import smjni.jnigen.ExposeToNative;
 
 
 import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExposeToNative(className="TestSmJNI")
 class TestSmJNI {
 
+    @ExposeToNative(typeName="jBase", className="Base")
     static class Base
     {
         Base(int val)
@@ -16,22 +20,28 @@ class TestSmJNI {
             value = val;
         }
 
+        @CalledByNative
         static int staticMethod(int val)
         {
             return val;
         }
 
+        @CalledByNative
         int instanceMethod(int val)
         {
             return val + 1;
         }
 
+        @CalledByNative
         int value;
+        @CalledByNative
         static int staticValue = 15;
     }
 
+    @ExposeToNative(typeName="jDerived", className="Derived")
     static class Derived extends Base
     {
+        @CalledByNative
         public Derived(int val)
         {
             super(val);

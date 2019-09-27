@@ -174,8 +174,10 @@ internal class Generator {
                         classHeader.write("    void $setter(JNIEnv * env")
                         if (javaEntity.templateArguments.size == 2) {
                             classHeader.write(", ${javaEntity.argTypes[0]} ${argNames[1]}")
+                            classHeader.write(", ${javaEntity.argTypes[1]} value")
+                        } else {
+                            classHeader.write(", ${javaEntity.argTypes[0]} value")
                         }
-                        classHeader.write(", ${javaEntity.argTypes[1]} value")
                         classHeader.write(") const\n        { $memberName.set(env")
                         if (javaEntity.templateArguments.size == 2) {
                             classHeader.write(", ${argNames[1]}")

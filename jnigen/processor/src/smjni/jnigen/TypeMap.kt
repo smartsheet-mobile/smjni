@@ -43,6 +43,7 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
         m_javaToCppNameMap["java.lang.String"] = "jstring"
         m_javaToCppNameMap["java.lang.Throwable"] = "jthrowable"
         m_javaToCppNameMap["java.lang.Class"] = "jclass"
+        m_javaToCppNameMap["java.nio.ByteBuffer"] = "jByteBuffer"
 
         val exposedToNative = ctxt.elementUtils.getTypeElement(EXPOSED_TO_NATIVE)
 
