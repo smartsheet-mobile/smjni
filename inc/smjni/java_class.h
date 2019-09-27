@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <mutex>
+#include <functional>
 
 #include <smjni/java_ref.h>
 #include <smjni/java_type_traits.h>

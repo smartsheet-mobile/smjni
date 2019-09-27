@@ -17,6 +17,8 @@
 #ifndef HEADER_JAVA_CLASS_TABLE_H_INCLUDED
 #define HEADER_JAVA_CLASS_TABLE_H_INCLUDED
 
+#include <smjni/config.h>
+
 namespace smjni
 {
     template<typename... Classes>

@@ -17,6 +17,7 @@
 #ifndef HEADER_SMJNI_JAVA_FRAME_H_INCLUDED
 #define	HEADER_SMJNI_JAVA_FRAME_H_INCLUDED
 
+#include <smjni/config.h>
 
 namespace smjni
 {

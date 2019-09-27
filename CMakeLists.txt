@@ -40,6 +40,7 @@ target_compile_options(smjni
     PUBLIC 
     $<$<CXX_COMPILER_ID:Clang>:-Wno-c++17-compat-mangling>
     $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++17-compat-mangling>
+    $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>
 )
 
 target_include_directories(smjni 

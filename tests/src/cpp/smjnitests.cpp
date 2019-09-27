@@ -216,7 +216,7 @@ void JNICALL TestSmJNI::testString(JNIEnv * env, jTestSmJNI self)
 {
     NATIVE_PROLOG
         jchar chars[] = {u'h', u'e', u'l', u'l', u'o'};
-        auto str1 = java_string_create(env, chars, std::size(chars));
+        auto str1 = java_string_create(env, chars, size_to_java(std::size(chars)));
         ASSERT_EQUAL(5, java_string_get_length(env, str1));
         ASSERT_EQUAL("hello", java_string_to_cpp(env, str1));
         auto str2 = java_string_create(env, "hello");
@@ -316,7 +316,7 @@ jByteBuffer JNICALL TestSmJNI::doTestDirectBuffer(JNIEnv * env, jTestSmJNI self,
         std::reverse(buf.begin(), buf.end());
 
         static uint8_t bytes[] = { 1, 2 }; //this must exist forever
-        java_direct_buffer<uint8_t> ret(bytes, std::size(bytes));
+        java_direct_buffer<uint8_t> ret(bytes, size_to_java(std::size(bytes)));
         return ret.to_java(env).release();
 
     NATIVE_EPILOG

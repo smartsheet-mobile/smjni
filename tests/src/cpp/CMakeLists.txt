@@ -14,3 +14,5 @@ set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_sources(smjnitests PRIVATE
     smjnitests.cpp
 )
+
+install(TARGETS smjnitests DESTINATION ${CMAKE_CURRENT_LIST_DIR}/../../build/native)

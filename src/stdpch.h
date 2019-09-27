@@ -19,7 +19,23 @@
 
 #include <jni.h>
 
-#include <pthread.h>
+#if __has_include(<pthread.h>)
+
+    #include <pthread.h>
+    #define USE_PTHREADS 1
+
+#elif __has_include(<windows.h>)
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <windows.h>
+
+    #define USE_WINTHREADS 1
+
+#else
+
+    #error Please define threading for your platform
+
+#endif
 
 #include <memory>
 #include <mutex>

@@ -30,10 +30,10 @@ namespace smjni
     public:
         typedef T * iterator;
         typedef const T * const_iterator;
-        typedef jsize size_type;
+        typedef jlong size_type;
         typedef T value_type;
     public:
-        java_direct_buffer(T * ptr, jsize size):
+        java_direct_buffer(T * ptr, jlong size):
             m_ptr(ptr),
             m_size(size)  
         {
@@ -47,13 +47,13 @@ namespace smjni
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            jsize byte_size = env->GetDirectBufferCapacity(obj.c_ptr());
+            jlong byte_size = env->GetDirectBufferCapacity(obj.c_ptr());
             if (byte_size == -1)
             {
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            m_size = byte_size / sizeof(T);
+            m_size = byte_size / jlong(sizeof(T));
         }
         
         local_java_ref<jByteBuffer> to_java(JNIEnv * env)
@@ -83,7 +83,7 @@ namespace smjni
         {
             return m_ptr + m_size;
         }
-        jsize size() const
+        jlong size() const
         {
             return m_size;
         }
@@ -97,7 +97,7 @@ namespace smjni
         }
     private:
         T * m_ptr = nullptr;
-        jsize m_size = 0;    
+        jlong m_size = 0;    
     };
 }
 

@@ -37,7 +37,7 @@ void java_registration_base::perform(JNIEnv * jenv, jclass clazz) const
             std::get<2>(entry)
         });
     }
-    int res = jenv->RegisterNatives(clazz, &methods[0], methods.size());
+    int res = jenv->RegisterNatives(clazz, &methods[0], size_to_java(methods.size()));
     if (res != 0)
     {
         java_exception::check(jenv);

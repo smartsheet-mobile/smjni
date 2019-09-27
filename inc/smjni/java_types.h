@@ -19,6 +19,8 @@
 
 #include <jni.h>
 
+#include <smjni/config.h>
+
 
 namespace smjni
 {

@@ -16,6 +16,7 @@
 
 #include "stdpch.h"
 #include <smjni/java_string.h>
+#include <smjni/java_type_traits.h>
 
 using namespace smjni;
 
@@ -24,7 +25,7 @@ local_java_ref<jstring> smjni::java_string_create(JNIEnv * env, const char * str
     std::vector<jchar> utf16_str;
     utf8_to_utf16(str, str + (str ? strlen(str) : 0), std::back_inserter(utf16_str));
     
-    jsize length = utf16_str.size(); 
+    jsize length = size_to_java(utf16_str.size()); 
     const jchar * start = length != 0 ? &utf16_str[0] : nullptr;
     return java_string_create(env, start, length);
 }
@@ -34,7 +35,7 @@ local_java_ref<jstring> smjni::java_string_create(JNIEnv * env, const std::strin
     std::vector<jchar> utf16_str;
     utf8_to_utf16(str.begin(), str.end(), std::back_inserter(utf16_str));
 
-    jsize length = utf16_str.size(); 
+    jsize length = size_to_java(utf16_str.size()); 
     const jchar * start = length != 0 ? &utf16_str[0] : nullptr;
     return java_string_create(env, start, length);
 }

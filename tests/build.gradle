@@ -19,11 +19,15 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.0'
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 test {
     useJUnitPlatform()
 
     systemProperty("java.library.path",
-            System.getProperty("java.library.path") + File.pathSeparator + file("../build/tests/src/cpp"))
+            System.getProperty("java.library.path") + File.pathSeparator + file("build/native"))
 }
 
 sourceSets {
@@ -39,7 +43,7 @@ task buildNative {
     }
     project.exec {
         commandLine = [
-                "cmake", "--build", file("../build").toString(), "--config", "Debug", "--target", "smjnitests"
+                "cmake", "--build", file("../build").toString(), "--config", "Debug", "--target", "install"
         ]
     }
 }

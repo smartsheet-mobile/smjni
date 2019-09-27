@@ -25,14 +25,38 @@
 namespace smjni
 {
 
-    template<typename T> [[gnu::always_inline]] inline constexpr T argument_to_java(T val) 
+    SMJNI_FORCE_INLINE jsize size_to_java(size_t size)
+    {
+        if (sizeof(size_t) >= sizeof(jsize))
+        {
+            if (size > std::numeric_limits<jsize>::max())
+                abort();
+            
+        }
+        return jsize(size);
+    }
+
+    SMJNI_FORCE_INLINE size_t java_size_to_cpp(jsize size)
+    {
+        if (size < 0)
+            abort();
+        if (sizeof(size_t) < sizeof(jsize))
+        {
+            if (size > std::numeric_limits<size_t>::max())
+                abort();
+            
+        }
+        return size_t(size);
+    }
+
+    template<typename T> SMJNI_FORCE_INLINE constexpr T argument_to_java(T val) 
         { return val; }
-    template<typename T> [[gnu::always_inline]] inline T argument_to_java(const auto_java_ref<T> & val)
+    template<typename T> SMJNI_FORCE_INLINE T argument_to_java(const auto_java_ref<T> & val)
         { return val.c_ptr(); }
 
-    template<typename T> [[gnu::always_inline]] inline constexpr T return_value_from_java(JNIEnv *, T val)
+    template<typename T> SMJNI_FORCE_INLINE constexpr T return_value_from_java(JNIEnv *, T val)
         { return val; }
-    template<typename T> [[gnu::always_inline]] inline local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val)
+    template<typename T> SMJNI_FORCE_INLINE local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val)
         { return jattach(env, val); }
 
 

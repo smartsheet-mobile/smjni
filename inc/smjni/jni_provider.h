@@ -21,6 +21,8 @@
 
 #include <memory>
 
+#include <smjni/config.h>
+
 namespace smjni
 {
     namespace internal

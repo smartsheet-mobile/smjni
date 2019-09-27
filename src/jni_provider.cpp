@@ -16,8 +16,6 @@
 
 #include "stdpch.h"
 
-#include <pthread.h>
-
 #include <smjni/jni_provider.h>
 #include <smjni/java_externals.h>
 
@@ -40,6 +38,7 @@ namespace smjni
             bool m_attached;
         };
 
+#if USE_PTHREADS
         class jni_provider_tls
         {
         public:
@@ -80,6 +79,50 @@ namespace smjni
         private:
             pthread_key_t m_key;
         };
+
+#elif USE_WINTHREADS
+
+        class jni_provider_tls
+        {
+        public:
+            jni_provider_tls():
+                m_index{FlsAlloc([] (void * value) {
+                    delete(static_cast<jni_record*>(value));
+                })}
+            {
+                if (m_index == FLS_OUT_OF_INDEXES)
+                    THROW_JAVA_PROBLEM("cannot create thread local index");
+            }
+            ~jni_provider_tls() noexcept
+            {
+                FlsFree(m_index);
+            }
+
+            jni_record & get() const
+            {
+                jni_record * ptr = static_cast<jni_record *>(FlsGetValue(m_index));
+                if (!ptr)
+                {
+                    ptr = new jni_record;
+                    do_set(ptr);
+                }
+                return *ptr;
+            }
+        private:
+            void do_set(jni_record * new_ptr) const
+            {
+                auto res = FlsSetValue(m_index, new_ptr);
+                if (!res)
+                {
+                    delete new_ptr;
+                    THROW_JAVA_PROBLEM("cannot set thread local value");
+                }
+            }
+        private:
+            DWORD m_index = FLS_OUT_OF_INDEXES;
+        };
+
+#endif
 
         jni_provider * g_provider = nullptr;
     }
