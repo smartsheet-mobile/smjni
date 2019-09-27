@@ -51,6 +51,16 @@ class TestSmJNI {
         assertArrayEquals(array, new int[] {5, 4, 3, 2, 1});
         assertArrayEquals(res, new char[] { 'a', 'b'});
     }
-
     private native char[] doTestPrimitiveArray(int[] array);
+
+    @Test
+    void testObjectArray()
+    {
+        String[] array = { "a", "b", "c", "d", "e" };
+        String[] res = doTestObjectArray(array);
+        assertArrayEquals(array, new String[] {"e", "d", "c", "b", "a"});
+        assertArrayEquals(res, new String[] { "a", "a"});
+    }
+
+    private native String[] doTestObjectArray(String[] array);
 }

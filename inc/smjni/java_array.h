@@ -87,6 +87,12 @@ namespace smjni
             {
                 m_parent->set(m_idx, el.c_ptr());
             }
+            friend void swap(proxy lhs, proxy rhs) //proxy is a "reference", this is a swap for referrent
+            {
+                local_java_ref<element_type> temp = lhs;
+                lhs = local_java_ref<element_type>(rhs);
+                rhs = temp;
+            }
         private:
             proxy(): 
                 m_parent(nullptr),
@@ -113,8 +119,12 @@ namespace smjni
             typedef void pointer;
             typedef proxy reference;
         public:
-            iterator()
-            {}
+            iterator() noexcept = default;
+            iterator(const iterator &) noexcept = default;
+            iterator(iterator &&) noexcept = default;
+            iterator & operator=(const iterator &) noexcept = default;
+            iterator & operator=(iterator &&) noexcept = default;
+            ~iterator() noexcept = default;
             
             proxy operator*() const
             {
@@ -124,67 +134,89 @@ namespace smjni
             {
                 return proxy(*m_parent, m_idx + dist);
             }
-            iterator & operator++()
+            iterator & operator++() noexcept
             {
                 ++m_idx;
                 return *this;
             }
-            iterator & operator--()
+            iterator & operator--() noexcept
             {
                 --m_idx;
                 return *this;
             }
-            iterator & operator+=(jsize dist)
+            iterator & operator+=(jsize dist) noexcept
             {
                 m_idx += dist;
                 return *this;
             }
-            iterator & operator-=(jsize dist)
+            iterator & operator-=(jsize dist) noexcept
             {
                 m_idx -= dist;
                 return *this;
             }
-            iterator operator++(int)
+            iterator operator++(int) noexcept
             {
                 const_iterator ret(*this);
                 ++m_idx;
                 return ret;
             }
-            iterator operator--(int)
+            iterator operator--(int) noexcept
             {
                 const_iterator ret(*this);
                 --m_idx;
                 return ret;
             }
-            iterator operator+(jsize dist) const
+            iterator operator+(jsize dist) const noexcept
             {
                 return iterator(*m_parent, m_idx + dist);
             }
-            iterator operator-(jsize dist) const
+            iterator operator-(jsize dist) const noexcept
             {
                 return iterator(*m_parent, m_idx - dist);
             }
-            jsize operator-(const iterator & rhs) const
+            jsize operator-(const iterator & rhs) const noexcept
             {
                 return m_idx - rhs.m_idx;
             }
+
+            void swap(iterator & other) noexcept
+            {
+                std::swap(m_parent, other.m_parent);
+                std::swap(m_idx, other.m_idx);
+            }
             
-            bool operator==(const iterator & rhs) const
+            bool operator==(const iterator & rhs) const noexcept
             {
                 return m_idx == rhs.m_idx;
             }
-            bool operator!=(const iterator & rhs) const
+            bool operator!=(const iterator & rhs) const noexcept
             {
                 return !(*this == rhs);
             }
+            bool operator<(const iterator & rhs) const noexcept
+            {
+                return m_idx < rhs.m_idx;
+            }
+            bool operator<=(const iterator & rhs) const noexcept
+            {
+                return m_idx <= rhs.m_idx;
+            }
+            bool operator>(const iterator & rhs) const noexcept
+            {
+                return !(*this <= rhs);
+            }
+            bool operator>=(const iterator & rhs) const noexcept
+            {
+                return !(*this < rhs);
+            }
         private:
-            iterator(java_array_access & parent, jsize idx):
+            iterator(java_array_access & parent, jsize idx) noexcept:
                 m_parent(&parent), 
                 m_idx(idx)
             {}
         private:
-            java_array_access * const m_parent;
-            jsize m_idx;
+            java_array_access * m_parent = nullptr;
+            jsize m_idx = 0;
         };
         
         class const_iterator 
@@ -197,12 +229,23 @@ namespace smjni
             typedef void pointer;
             typedef local_java_ref<element_type> reference;
         public:
-            const_iterator()
-            {}
-            const_iterator(const iterator & it):
+            const_iterator() noexcept = default;
+            const_iterator(const const_iterator &) noexcept = default;
+            const_iterator(const_iterator &&) noexcept = default;
+            const_iterator & operator=(const const_iterator &) noexcept = default;
+            const_iterator & operator=(const_iterator &&) noexcept = default;
+            ~const_iterator() noexcept = default;
+
+            const_iterator(const iterator & it) noexcept:
                 m_parent(it.m_parent),
                 m_idx(it.m_idx)
             {}
+            void swap(const_iterator & other) noexcept
+            {
+                std::swap(m_parent, other.m_parent);
+                std::swap(m_idx, other.m_idx);
+            }
+
             local_java_ref<element_type> operator*() const
             {
                 return jattach(m_parent->m_env, m_parent->get(m_idx));
@@ -211,66 +254,83 @@ namespace smjni
             {
                 return jattach(m_parent->m_env, m_parent->get(m_idx + dist));
             }
-            const_iterator & operator++()
+            const_iterator & operator++() noexcept
             {
                 ++m_idx;
                 return *this;
             }
-            const_iterator & operator--()
+            const_iterator & operator--() noexcept
             {
                 --m_idx;
                 return *this;
             }
-            const_iterator & operator+=(jsize dist)
+            const_iterator & operator+=(jsize dist) noexcept
             {
                 m_idx += dist;
                 return *this;
             }
-            const_iterator & operator-=(jsize dist)
+            const_iterator & operator-=(jsize dist) noexcept
             {
                 m_idx -= dist;
                 return *this;
             }
-            const_iterator operator++(int)
+            const_iterator operator++(int) noexcept
             {
                 const_iterator ret(*this);
                 ++m_idx;
                 return ret;
             }
-            const_iterator operator--(int)
+            const_iterator operator--(int) noexcept
             {
                 const_iterator ret(*this);
                 --m_idx;
                 return ret;
             }
-            const_iterator operator+(jsize dist) const
+            const_iterator operator+(jsize dist) const noexcept
             {
                 return const_iterator(m_parent, m_idx + dist);
             }
-            const_iterator operator-(jsize dist) const
+            const_iterator operator-(jsize dist) const noexcept
             {
                 return const_iterator(m_parent, m_idx - dist);
             }
-            jsize operator-(const const_iterator & rhs) const
+            jsize operator-(const const_iterator & rhs) const noexcept
             {
                 return m_idx - rhs.m_idx;
             }
-            bool operator==(const const_iterator & rhs) const
+
+            bool operator==(const const_iterator & rhs) const noexcept
             {
                 return m_idx == rhs.m_idx;
             }
-            bool operator!=(const const_iterator & rhs) const
+            bool operator!=(const const_iterator & rhs) const noexcept
             {
                 return !(*this == rhs);
             }
+            bool operator<(const iterator & rhs) const noexcept
+            {
+                return m_idx < rhs.m_idx;
+            }
+            bool operator<=(const iterator & rhs) const noexcept
+            {
+                return m_idx <= rhs.m_idx;
+            }
+            bool operator>(const iterator & rhs) const noexcept
+            {
+                return !(*this <= rhs);
+            }
+            bool operator>=(const iterator & rhs) const noexcept
+            {
+                return !(*this < rhs);
+            }
         private:
-            const_iterator(const java_array_access & parent, jsize idx):
+            const_iterator(const java_array_access & parent, jsize idx) noexcept:
                 m_parent(&parent), 
                 m_idx(idx)
             {}
         private:
-            const java_array_access * const m_parent;
-            jsize m_idx;
+            const java_array_access * m_parent = nullptr;
+            jsize m_idx = 0;
         };
         
         typedef jsize size_type;

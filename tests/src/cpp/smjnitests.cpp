@@ -57,6 +57,7 @@ public:
 
     static void JNICALL testString(JNIEnv * env, jTestSmJNI self);
     static jcharArray JNICALL doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self, jintArray array);
+    static jstringArray JNICALL doTestObjectArray(JNIEnv * env, jTestSmJNI self, jstringArray array);
 
     void register_methods(JNIEnv * env) const
     {
@@ -65,6 +66,7 @@ public:
         registration.add_instance_method("nativeMethod", nativeMethod);
         registration.add_instance_method("testString", testString);
         registration.add_instance_method("doTestPrimitiveArray", doTestPrimitiveArray);
+        registration.add_instance_method("doTestObjectArray", doTestObjectArray);
 
         registration.perform(env, *this);
     }
@@ -164,7 +166,8 @@ jboolean JNICALL TestSmJNI::nativeMethod(JNIEnv * env, jTestSmJNI, jboolean bl, 
         {
             java_array_access access(env, stra);
             auto expected = { "abc" , "xyz" };
-            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end(), [env] (const auto & lhs, const auto & rhs) {
+            ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end(),
+                                   [env] (const auto & lhs, const auto & rhs) {
                 return rhs == java_string_to_cpp(env, local_java_ref<jstring>(lhs));
             }));
         }
@@ -217,6 +220,7 @@ jcharArray JNICALL TestSmJNI::doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self
 
         {
             java_array_access access(env, array);
+            ASSERT_EQUAL(5, access.size());
             auto expected = {1, 2, 3, 4, 5};
             ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end()));
 
@@ -239,6 +243,28 @@ jcharArray JNICALL TestSmJNI::doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self
         std::vector<jchar> res = {u'a', u'b'};
         auto ret = java_array_create<jchar>(env, res.begin(), res.end());
         return ret.release();
+    NATIVE_EPILOG
+    return nullptr;
+}
+
+jstringArray JNICALL TestSmJNI::doTestObjectArray(JNIEnv * env, jTestSmJNI self, jstringArray array)
+{
+    NATIVE_PROLOG
+
+       java_array_access access(env, array);
+       ASSERT_EQUAL(5, access.size());
+       auto expected = {"a", "b", "c", "d", "e"};
+       ASSERT_TRUE(std::equal(access.begin(), access.end(), expected.begin(), expected.end(),
+                               [env] (const auto & lhs, const auto & rhs) {
+            return rhs == java_string_to_cpp(env, local_java_ref<jstring>(lhs));
+        }));
+
+       std::reverse(access.begin(), access.end());
+       auto ret = java_array_create(env, java_class<jstring>(java_class<jstring>::find(env)), 2,
+                                    java_string_create(env, "a"));
+
+       return ret.release();
+
     NATIVE_EPILOG
     return nullptr;
 }

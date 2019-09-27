@@ -83,11 +83,11 @@ namespace smjni
     private:
         static std::shared_ptr<java_class_holder> init(JNIEnv * jenv, std::function<local_java_ref<jclass> (JNIEnv *)> loader)
         {
-            return do_init([loader, jenv] () { return loader(jenv); });
+            return do_init([loader, jenv] () -> global_java_ref<jclass> { return loader(jenv); });
         }
         static std::shared_ptr<java_class_holder> init(const auto_java_ref<jclass> & clazz)
         {
-            return do_init([clazz] (JNIEnv *) { return clazz; });
+            return do_init([clazz] () -> global_java_ref<jclass> { return clazz; });
         }
 
         static std::shared_ptr<java_class_holder> do_init(std::function<global_java_ref<jclass> ()> loader)
