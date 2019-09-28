@@ -486,6 +486,22 @@ namespace smjni
         res_access.commit(env);
         return res;
     }
+
+    template<typename T>
+    std::enable_if_t<!std::is_convertible<T, jobject>::value,
+    void> java_array_set_region(JNIEnv * env, const auto_java_ref<java_array_type_of_t<T>> & array, jsize start, jsize len, const T * buf)
+    {
+        java_type_traits<T>::set_array_region(env, array.c_ptr(), start, len, buf);
+        java_exception::check(env);
+    }
+
+    template<typename T>
+    std::enable_if_t<!std::is_convertible<T, jobject>::value,
+    void> java_array_get_region(JNIEnv * env, const auto_java_ref<java_array_type_of_t<T>> & array, jsize start, jsize len, T * buf)
+    {
+        java_type_traits<T>::get_array_region(env, array.c_ptr(), start, len, buf);
+        java_exception::check(env);
+    }
 }
 
 #endif //HEADER_JAVA_ARRAY_H_INCLUDED

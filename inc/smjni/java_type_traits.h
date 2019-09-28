@@ -196,6 +196,14 @@ namespace smjni
             {\
                return jenv->New##name##Array(size);\
             }\
+            static void set_array_region(JNIEnv * jenv, jtype##Array array, jsize start, jsize len, const jtype * buf)\
+            {\
+                jenv->Set##name##ArrayRegion(array, start, len, buf);\
+            }\
+            static void get_array_region(JNIEnv * jenv, jtype##Array array, jsize start, jsize len, jtype * buf)\
+            {\
+                jenv->Get##name##ArrayRegion(array, start, len, buf);\
+            }\
         };\
     }
 
