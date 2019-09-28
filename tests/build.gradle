@@ -18,7 +18,6 @@ String JNIGEN_OUTPUT_LIST_NAME = "outputs.txt"
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    project.projectDir
     testCompileOnly(files("${project.projectDir}/../jnigen/build/jnigen-annotations.jar"))
     testAnnotationProcessor(files("${project.projectDir}/../jnigen/build/jnigen.jar"))
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.0'
@@ -72,13 +71,19 @@ task buildNative(dependsOn: cleanStaleJNIHeaders) {
     doLast {
         project.exec {
             commandLine = [
-                    "cmake", "-S", projectDir.parent, "-B", file("../build").toString()
+                    "cmake",
+                    "-DSMJNI_INCLUDE_TESTS=true",
+                    "-S", projectDir.parent,
+                    "-B", file("../build").toString()
             ]
         }
         project.exec {
             commandLine = [
-                    "cmake", "--build", file("../build").toString(), "--config", "Debug",
-                    "--target", "smjnitests", "--target", "install"
+                    "cmake",
+                    "--build", file("../build").toString(),
+                    "--config", "Debug",
+                    "--target", "smjnitests",
+                    "--target", "install"
             ]
         }
     }

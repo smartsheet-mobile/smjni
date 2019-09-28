@@ -53,4 +53,6 @@ target_include_directories(smjni
     ${JNI_INCLUDE_DIRS}
 )
 
+if(SMJNI_INCLUDE_TESTS)
 add_subdirectory(tests/src/cpp)
+endif()
