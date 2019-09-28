@@ -75,6 +75,8 @@ namespace smjni
             m_str(str.c_ptr()),
             m_length(java_string_get_length(env, str))
         {
+            if (!str)
+                return;
             m_data = env->GetStringChars(m_str, nullptr);
             if (!m_data)
             {

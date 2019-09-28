@@ -165,6 +165,9 @@ void JNICALL TestSmJNI::testString(JNIEnv * env, jTestSmJNI self)
         ASSERT_EQUAL(0, java_string_get_length(env, empty));
         ASSERT_EQUAL("", java_string_to_cpp(env, empty));
 
+        ASSERT_EQUAL(0, java_string_get_length(env, nullptr));
+        ASSERT_EQUAL("", java_string_to_cpp(env, nullptr));
+
         jchar buf[5] = {};
         java_string_get_region(env, str1, 1, 2, buf);
         ASSERT_EQUAL(u'e', buf[0]);
@@ -180,6 +183,10 @@ void JNICALL TestSmJNI::testString(JNIEnv * env, jTestSmJNI self)
         java_string_access empty_access(env, empty);
         ASSERT_EQUAL(0, empty_access.size());
         ASSERT_TRUE(empty_access.begin() == empty_access.end());
+
+        java_string_access null_access(env, nullptr);
+        ASSERT_EQUAL(0, null_access.size());
+        ASSERT_TRUE(null_access.begin() == null_access.end());
     NATIVE_EPILOG
 }
 
@@ -207,6 +214,11 @@ jcharArray JNICALL TestSmJNI::doTestPrimitiveArray(JNIEnv * env, jTestSmJNI self
 
             access.commit();
             ASSERT_TRUE(access.begin() == nullptr);
+        }
+        {
+            java_array_access<jbyteArray> access(env, nullptr);
+            ASSERT_EQUAL(0, access.size());
+            ASSERT_TRUE(access.begin() == access.end());
         }
 
         std::vector<jchar> res = {u'a', u'b'};

@@ -37,7 +37,7 @@ namespace smjni
         java_array_access_base(JNIEnv * env, const auto_java_ref<T> & array):
             m_env(env),
             m_array(array.c_ptr()),
-            m_length(m_env->GetArrayLength(m_array))
+            m_length(m_array ? m_env->GetArrayLength(m_array) : 0)
         {
             java_exception::check(env);
         }
@@ -395,9 +395,9 @@ namespace smjni
     public:
         java_array_access(JNIEnv * env, const auto_java_ref<T> & array):
             java_array_access_base<T>(env, array),
-            m_data(java_type_traits<T>::get_array_elements(env, this->m_array, nullptr))
+            m_data(array ? java_type_traits<T>::get_array_elements(env, array.c_ptr(), nullptr) : nullptr)
         {
-            if (!m_data)
+            if (array && !m_data)
             {
                 java_exception::check(env);
                 THROW_JAVA_PROBLEM("cannot access java array");
