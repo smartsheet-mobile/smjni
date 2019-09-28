@@ -26,10 +26,37 @@ else()
 endif()
 
 
+add_library(smjni STATIC
+    src/stdpch.h
+    src/java_exception.cpp
+    src/java_externals.cpp
+    src/java_field.cpp
+    src/java_method.cpp
+    src/java_registration.cpp
+    src/java_runtime.cpp
+    src/java_string.cpp
+    src/jni_provider.cpp
 
-file(GLOB SOURCE_FILES "src/*.cpp")
-
-add_library(smjni STATIC ${SOURCE_FILES})
+    inc/smjni/config.h
+    inc/smjni/java_array.h
+    inc/smjni/java_class_table.h
+    inc/smjni/java_class.h
+    inc/smjni/java_direct_buffer.h
+    inc/smjni/java_exception.h
+    inc/smjni/java_externals.h
+    inc/smjni/java_field.h
+    inc/smjni/java_frame.h
+    inc/smjni/java_method.h
+    inc/smjni/java_ref.h
+    inc/smjni/java_registration.h
+    inc/smjni/java_runtime.h
+    inc/smjni/java_string.h
+    inc/smjni/java_type_traits.h
+    inc/smjni/java_types.h
+    inc/smjni/jni_provider.h
+    inc/smjni/smjni.h
+    inc/smjni/utf_util.h
+)
 
 set_property(TARGET smjni PROPERTY CXX_STANDARD 14)
 set_property(TARGET smjni PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -44,6 +71,8 @@ target_compile_options(smjni
 
     PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4;/wd4100;/wd4127>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
 )
 
 target_include_directories(smjni 
@@ -54,5 +83,5 @@ target_include_directories(smjni
 )
 
 if(SMJNI_INCLUDE_TESTS)
-add_subdirectory(tests/src/cpp)
+    add_subdirectory(tests/src/cpp)
 endif()
