@@ -17,6 +17,7 @@ import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.*
+import javax.tools.Diagnostic
 
 @Suppress("unused")
 class Processor: javax.annotation.processing.Processor  {
@@ -47,11 +48,17 @@ class Processor: javax.annotation.processing.Processor  {
         if (annotations == null || annotations.size == 0)
             return true
 
-        val typeMap = TypeMap(m_context, env!!)
+        try {
+            val typeMap = TypeMap(m_context, env!!)
 
-        val generator = Generator()
+            val generator = Generator()
 
-        generator.generate(typeMap, m_context)
+            generator.generate(typeMap, m_context)
+
+        } catch (ex: ProcessingException) {
+
+            m_context.messager.printMessage(Diagnostic.Kind.ERROR, ex.message, ex.element)
+        }
 
         return true
     }

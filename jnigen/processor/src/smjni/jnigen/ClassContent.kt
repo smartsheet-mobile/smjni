@@ -62,54 +62,60 @@ internal class ClassContent(val classElement: TypeElement,
 
         for (childElement in classElement.enclosedElements) {
 
-            when (childElement.kind) {
-                ElementKind.METHOD -> {
+            try {
+                when (childElement.kind) {
+                    ElementKind.METHOD -> {
 
-                    val methodElement = childElement as ExecutableElement
+                        val methodElement = childElement as ExecutableElement
 
-                    if (childElement.modifiers.contains(Modifier.NATIVE))
-                        addNativeMethod(methodElement, previousNativeNameUsers, typeMap)
+                        if (childElement.modifiers.contains(Modifier.NATIVE))
+                            addNativeMethod(methodElement, previousNativeNameUsers, typeMap)
 
-                    val annotation = childElement.annotationMirrors.find {
-                        val annotationType = it.annotationType.asElement() as TypeElement
-                        annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
-                    }
-                    if (annotation != null) {
-                        var allowNonVirt = false
-                        for((name, value) in ctxt.elementUtils.getElementValuesWithDefaults(annotation)) {
-
-                            when {
-                                name.simpleName.contentEquals("allowNonVirtualCall") -> allowNonVirt = value.value as Boolean
-                            }
+                        val annotation = childElement.annotationMirrors.find {
+                            val annotationType = it.annotationType.asElement() as TypeElement
+                            annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
                         }
+                        if (annotation != null) {
+                            var allowNonVirt = false
+                            for ((name, value) in ctxt.elementUtils.getElementValuesWithDefaults(annotation)) {
 
-                        addJavaMethod(methodElement, allowNonVirt, names, typeMap)
+                                when {
+                                    name.simpleName.contentEquals("allowNonVirtualCall") -> allowNonVirt = value.value as Boolean
+                                }
+                            }
 
+                            addJavaMethod(methodElement, allowNonVirt, names, typeMap)
+
+                        }
+                    }
+                    ElementKind.FIELD -> {
+
+                        val fieldElement = childElement as VariableElement
+
+                        if (childElement.annotationMirrors.any {
+                                    val annotationType = it.annotationType.asElement() as TypeElement
+                                    annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
+                                }) {
+                            addJavaField(fieldElement, names, typeMap)
+                        }
+                    }
+                    ElementKind.CONSTRUCTOR -> {
+
+                        val constructorElement = childElement as ExecutableElement
+
+                        if (childElement.annotationMirrors.any {
+                                    val annotationType = it.annotationType.asElement() as TypeElement
+                                    annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
+                                }) {
+                            addJavaConstructor(constructorElement, names, typeMap)
+                        }
+                    }
+                    else -> {
                     }
                 }
-                ElementKind.FIELD -> {
-
-                    val fieldElement = childElement as VariableElement
-
-                    if (childElement.annotationMirrors.any {
-                        val annotationType = it.annotationType.asElement() as TypeElement
-                        annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
-                    }) {
-                        addJavaField(fieldElement, names, typeMap)
-                    }
-                }
-                ElementKind.CONSTRUCTOR -> {
-
-                    val constructorElement = childElement as ExecutableElement
-
-                    if (childElement.annotationMirrors.any {
-                        val annotationType = it.annotationType.asElement() as TypeElement
-                        annotationType.qualifiedName.contentEquals(CALLED_BY_NATIVE)
-                    }) {
-                        addJavaConstructor(constructorElement, names, typeMap)
-                    }
-                }
-                else -> {}
+            } catch (ex: ProcessingException) {
+                ex.element = childElement
+                throw ex
             }
         }
 

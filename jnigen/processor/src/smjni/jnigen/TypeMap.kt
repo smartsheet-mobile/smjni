@@ -188,18 +188,10 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
 
     private fun nativeNameOf(el: TypeElement): String {
 
-        var current = el
-
-        while(true) {
-
-            val ret = m_javaToCppNameMap[current.qualifiedName.toString()]
-            if (ret != null)
-                return ret
-            if (current.superclass.kind == TypeKind.NONE)
-                break
-            current = (current.superclass as DeclaredType).asElement() as TypeElement
-        }
-        return "jobject"
+        val ret = m_javaToCppNameMap[el.qualifiedName.toString()]
+        if (ret == null)
+            throw ProcessingException("${el.qualifiedName} is not exposed to C++ via annotation or command line", el)
+        return ret
     }
 
     private fun getExposedDataFromAnnotation(classElement: TypeElement,
