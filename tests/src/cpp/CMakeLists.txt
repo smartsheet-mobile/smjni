@@ -14,6 +14,12 @@
 # limitations under the License.
 #
 
+cmake_minimum_required(VERSION 3.5)
+
+project(smjnitests)
+
+add_subdirectory("../../.." ${CMAKE_CURRENT_BINARY_DIR}/smjni)
+
 add_library(smjnitests SHARED EXCLUDE_FROM_ALL)
 
 target_link_libraries(smjnitests PRIVATE

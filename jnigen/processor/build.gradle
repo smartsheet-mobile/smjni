@@ -18,6 +18,7 @@ apply plugin: 'groovy'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 
+project.group "smjni.jnigen"
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

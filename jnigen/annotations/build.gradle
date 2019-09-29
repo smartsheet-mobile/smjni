@@ -17,6 +17,7 @@
 
 apply plugin: 'java'
 
+project.group "smjni.jnigen"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 
