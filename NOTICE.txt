@@ -5,10 +5,9 @@
 =========================================================================
 
 Smartsheet SmJNI
-Copyright 2014 Smartsheet.com, Inc.
+Copyright 2014 Smartsheet Inc.
+Copyright 2019 SmJNI Contributors
 
 This product includes software developed at
 Smartsheet.com, Inc. (http://www.smartsheet.com).
 
-
-Copyright 2019 Eugene Gershnik
