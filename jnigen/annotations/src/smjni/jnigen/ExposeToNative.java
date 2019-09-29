@@ -23,12 +23,53 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 
+/**
+ * Marks a class element that will be made accessible from native code
+ *
+ * Putting this annotation on a class will make JniGen processor to
+ * <ul>
+ * <li>Define a C++ strong type (e.g. jSomeClass) to represent objects
+ * of annotated class in C++ code</li>
+ * <li>Define a C++ class (derived from java_class&lt;jSomeClass&gt;) to
+ * access annotated class in C++ code</li>
+ * <li>Make any elements annotated with {@link CalledByNative}  accessible
+ *   via C++ class</li>
+ * <li>Generate declarations for any `native` methods in C++ class to be
+ * implemented in native code</li>
+ * </ul>
+ *
+ * The parameters of this annotation allow you to customize code generation process
+ */
 @Target(value = {TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface ExposeToNative {
 
+    /**
+     * The "stem" of the name to be used for generated C++ types
+     *
+     * For example if value is "Foo" the generated objected type will be jFoo,
+     * the C++ class Foo_class etc.
+     */
     String value() default "";
+
+    /**
+     * The name of the C++ strong type to represent instances of the class
+     *
+     * The default is jJavaTypeName or if {@link #value()} is set j{$value}
+     */
     String typeName() default "";
+
+    /**
+     * The name of the C++ type to represent the class
+     *
+     * The default is JavaTypeName_class or if {@link #value()} is set {$value}_class
+     */
     String className() default "";
+
+    /**
+     * Name of the header file for the generated C++ code
+     *
+     * The default is JavaTypeName_class.h or if {@link #value()} is set {$value}_class.h
+     */
     String header() default "";
 }

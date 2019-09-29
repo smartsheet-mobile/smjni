@@ -25,9 +25,25 @@ import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 
+/**
+ * Marks class element that will be made callable by native code
+ *
+ * Putting this annotation on a class element will cause JniGen
+ * annotation processor to emit bridging C++ code to access the
+ * element from native code.
+ */
 @Target(value = {METHOD, CONSTRUCTOR, FIELD})
 @Retention(RetentionPolicy.CLASS)
 public @interface CalledByNative
 {
+    /**
+     * Make a non-static method also callable non-virtually
+     *
+     * By default JniGen only exposes normal virtual calls
+     * to class methods. If this argument is set to true JniGen
+     * will generate additional wrappers to allow non-virtual
+     * call.
+     * This has no effect of constructors, fields and static methods
+     */
     boolean allowNonVirtualCall() default false;
 }
