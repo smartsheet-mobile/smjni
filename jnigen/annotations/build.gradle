@@ -18,6 +18,7 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id "com.jfrog.bintray" version "1.8.1"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -52,7 +53,7 @@ task javadocJar(type: Jar) {
 
 publishing {
     publications {
-        myPublicationName(MavenPublication) {
+        thePublication(MavenPublication) {
             from components.java
             artifact sourceJar
             artifact javadocJar
@@ -74,6 +75,32 @@ publishing {
             }
         }
     }
+}
+
+Properties localProperties = new Properties()
+localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+    user = localProperties.getProperty('bintray.user')
+    key = localProperties.getProperty('bintray.key')
+    publications = ['thePublication']
+
+    pkg {
+        repo = 'smjni.jnigen'
+        name = 'annotations'
+        licenses = ['Apache-2.0']
+        desc = 'Annotations used by SmJNI JniGen annotation processor to generate C++ code'
+        websiteUrl = 'https://github.com/smartsheet-mobile/smjni'
+        vcsUrl = 'https://github.com/smartsheet-mobile/smjni.git'
+        issueTrackerUrl = 'https://github.com/smartsheet-mobile/smjni/issues'
+        override = true
+        version {
+            name = project.version
+            desc = project.version
+            released  = new Date()
+        }
+    }
+
 }
 
 

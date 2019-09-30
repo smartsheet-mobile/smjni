@@ -16,8 +16,9 @@ plugins {
     id 'java'
     id 'kotlin'
     id 'groovy'
-    id 'org.jetbrains.dokka' version '0.9.18'
+    //id 'org.jetbrains.dokka' version '0.9.18'
     id 'maven-publish'
+    id "com.jfrog.bintray" version "1.8.1"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -60,35 +61,40 @@ javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
-task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+/*task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
     if (!JavaVersion.current().java10Compatible) {
         outputFormat = "javadoc"
     }
     outputDirectory = javadoc.destinationDir
     inputs.dir 'src'
     reportUndocumented = false
-}
+}*/
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava, sourceSets.main.kotlin, sourceSets.main.groovy
     classifier "sources"
 }
 
-task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
+/*task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
     from javadoc.destinationDir
     classifier 'javadoc'
-}
+}*/
+
+def libraryDescription = "Annotation processor that generates SmJNI C++ code from Java annotations"
+def libraryWebsiteUrl = 'https://github.com/smartsheet-mobile/smjni'
+def libraryVcsUrl = 'https://github.com/smartsheet-mobile/smjni.git'
+def libraryIssueTrackerUrl = 'https://github.com/smartsheet-mobile/smjni/issues'
 
 publishing {
     publications {
-        myPublicationName(MavenPublication) {
+        thePublication(MavenPublication) {
             from components.java
             artifact sourceJar
-            artifact javadocJar
+            //artifact javadocJar
             pom {
                 name = "SmJNI Code Generator"
-                description = "Annotation processor that generates SmJNI C++ code from Java annotations"
-                url = "https://github.com/smartsheet-mobile/smjni"
+                description = libraryDescription
+                url = libraryWebsiteUrl
                 licenses {
                     license {
                         name = "The Apache License, Version 2.0"
@@ -98,12 +104,37 @@ publishing {
                 scm {
                     connection = "git@github.com:smartsheet-mobile/smjni.git"
                     developerConnection = "git@github.com:smartsheet-mobile/smjni.git"
-                    url = "https://github.com/smartsheet-mobile/smjni.git"
+                    url = libraryVcsUrl
                 }
             }
         }
     }
 }
 
+Properties localProperties = new Properties()
+localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+    user = localProperties.getProperty('bintray.user')
+    key = localProperties.getProperty('bintray.key')
+    publications = ['thePublication']
+
+    pkg {
+        repo = 'smjni.jnigen'
+        name = 'processor'
+        licenses = ['Apache-2.0']
+        desc = libraryDescription
+        websiteUrl = libraryWebsiteUrl
+        vcsUrl = libraryVcsUrl
+        issueTrackerUrl = libraryIssueTrackerUrl
+        override = true
+        version {
+            name = project.version
+            desc = project.version
+            released  = new Date()
+        }
+    }
+
+}
 
 
