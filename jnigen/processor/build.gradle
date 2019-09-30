@@ -111,30 +111,29 @@ publishing {
     }
 }
 
-Properties localProperties = new Properties()
-localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+if (project.hasProperty("bintray.user") && project.hasProperty("bintray.key")) {
+    bintray {
+        user = project.getProperty('bintray.user')
+        key = project.getProperty('bintray.key')
+        publications = ['thePublication']
 
-bintray {
-    user = localProperties.getProperty('bintray.user')
-    key = localProperties.getProperty('bintray.key')
-    publications = ['thePublication']
-
-    pkg {
-        repo = 'smjni.jnigen'
-        name = 'processor'
-        licenses = ['Apache-2.0']
-        desc = libraryDescription
-        websiteUrl = libraryWebsiteUrl
-        vcsUrl = libraryVcsUrl
-        issueTrackerUrl = libraryIssueTrackerUrl
-        override = true
-        version {
-            name = project.version
-            desc = project.version
-            released  = new Date()
+        pkg {
+            repo = 'smjni.jnigen'
+            name = 'processor'
+            licenses = ['Apache-2.0']
+            desc = libraryDescription
+            websiteUrl = libraryWebsiteUrl
+            vcsUrl = libraryVcsUrl
+            issueTrackerUrl = libraryIssueTrackerUrl
+            override = true
+            version {
+                name = project.version
+                desc = project.version
+                released = new Date()
+            }
         }
-    }
 
+    }
 }
 
 

@@ -51,6 +51,12 @@ task javadocJar(type: Jar) {
     classifier 'javadoc'
 }
 
+def libraryDescription = "Annotations used by SmJNI JniGen annotation processor to generate C++ code"
+def libraryWebsiteUrl = 'https://github.com/smartsheet-mobile/smjni'
+def libraryVcsUrl = 'https://github.com/smartsheet-mobile/smjni.git'
+def libraryIssueTrackerUrl = 'https://github.com/smartsheet-mobile/smjni/issues'
+
+
 publishing {
     publications {
         thePublication(MavenPublication) {
@@ -59,8 +65,8 @@ publishing {
             artifact javadocJar
             pom {
                 name = "SmJNI Code Generation Annotations"
-                description = "Annotations used by SmJNI JniGen annotation processor to generate C++ code"
-                url = "https://github.com/smartsheet-mobile/smjni"
+                description = libraryDescription
+                url = libraryWebsiteUrl
                 licenses {
                     license {
                         name = "The Apache License, Version 2.0"
@@ -70,37 +76,37 @@ publishing {
                 scm {
                     connection = "git@github.com:smartsheet-mobile/smjni.git"
                     developerConnection = "git@github.com:smartsheet-mobile/smjni.git"
-                    url = "https://github.com/smartsheet-mobile/smjni.git"
+                    url = libraryVcsUrl
                 }
             }
         }
     }
 }
 
-Properties localProperties = new Properties()
-localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+if (project.hasProperty("bintray.user") && project.hasProperty("bintray.key")) {
 
-bintray {
-    user = localProperties.getProperty('bintray.user')
-    key = localProperties.getProperty('bintray.key')
-    publications = ['thePublication']
+    bintray {
+        user = project.getProperty('bintray.user')
+        key = project.getProperty('bintray.key')
+        publications = ['thePublication']
 
-    pkg {
-        repo = 'smjni.jnigen'
-        name = 'annotations'
-        licenses = ['Apache-2.0']
-        desc = 'Annotations used by SmJNI JniGen annotation processor to generate C++ code'
-        websiteUrl = 'https://github.com/smartsheet-mobile/smjni'
-        vcsUrl = 'https://github.com/smartsheet-mobile/smjni.git'
-        issueTrackerUrl = 'https://github.com/smartsheet-mobile/smjni/issues'
-        override = true
-        version {
-            name = project.version
-            desc = project.version
-            released  = new Date()
+        pkg {
+            repo = 'smjni.jnigen'
+            name = 'annotations'
+            licenses = ['Apache-2.0']
+            desc = libraryDescription
+            websiteUrl = libraryWebsiteUrl
+            vcsUrl = libraryVcsUrl
+            issueTrackerUrl = libraryIssueTrackerUrl
+            override = true
+            version {
+                name = project.version
+                desc = project.version
+                released = new Date()
+            }
         }
-    }
 
+    }
 }
 
 
