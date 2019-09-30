@@ -16,6 +16,7 @@ plugins {
     id 'java'
     id 'kotlin'
     id 'groovy'
+    id 'org.jetbrains.dokka' version '0.9.18'
     id 'maven-publish'
 }
 
@@ -59,13 +60,22 @@ javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
+task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+    if (!JavaVersion.current().java10Compatible) {
+        outputFormat = "javadoc"
+    }
+    outputDirectory = javadoc.destinationDir
+    inputs.dir 'src'
+    reportUndocumented = false
+}
+
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava, sourceSets.main.kotlin, sourceSets.main.groovy
     classifier "sources"
 }
 
-task javadocJar(type: Jar) {
-    from javadoc
+task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
+    from javadoc.destinationDir
     classifier 'javadoc'
 }
 
