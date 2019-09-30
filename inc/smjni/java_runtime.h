@@ -33,7 +33,7 @@ namespace smjni
         {
         public:
             core_class(JNIEnv * env):
-                java_class<T>(env, java_runtime::find_core_class<T>)
+                java_class<T>(env, java_runtime::get_core_class<T>)
             {}       
         };
     public:
@@ -42,7 +42,7 @@ namespace smjni
         {
         public:
             simple_java_class(JNIEnv * env):
-                java_class<T>(env, [] (JNIEnv * env) { return java_runtime::find_class<T>(env); })
+                java_class<T>(env, [] (JNIEnv * env) { return java_runtime::get_class<T>(env); })
             {}   
         };
 
@@ -80,7 +80,7 @@ namespace smjni
         }
         
         template<typename T> 
-        static local_java_ref<jclass> find_class(JNIEnv * env)
+        static local_java_ref<jclass> get_class(JNIEnv * env)
         {
             auto ret = do_find<T>(env);
             if (!ret)
@@ -89,18 +89,30 @@ namespace smjni
                 THROW_JAVA_PROBLEM("failed to locate %s", java_type_traits<T>::class_name());
             }
             return ret;
-        }  
+        }
+
+        template<typename T> 
+        static local_java_ref<jclass> find_class(JNIEnv * env)
+        {
+            auto ret = do_find<T>(env);
+            if (!ret)
+                env->ExceptionClear();
+            return ret;
+        }
         
         
     private:
         java_runtime(JNIEnv * jenv);
             
         template<typename T> 
-        static local_java_ref<jclass> find_core_class(JNIEnv * env)
+        static local_java_ref<jclass> get_core_class(JNIEnv * env)
         {
             auto ret = do_find<T>(env);
             if (!ret)
+            {
+                env->ExceptionClear();
                 THROW_JAVA_PROBLEM("failed to locate %s", java_type_traits<T>::class_name());
+            }
             return ret;
         }  
 

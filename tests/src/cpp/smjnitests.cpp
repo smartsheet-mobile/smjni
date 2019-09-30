@@ -257,7 +257,7 @@ jstringArray JNICALL TestSmJNI::doTestObjectArray(JNIEnv * env, jTestSmJNI self,
         }));
 
        std::reverse(access.begin(), access.end());
-       auto string_class = java_class<jstring>(env, [] (JNIEnv * env) { return java_runtime::find_class<jstring>(env); });
+       auto string_class = java_class<jstring>(env, [] (JNIEnv * env) { return java_runtime::get_class<jstring>(env); });
        auto ret = java_array_create(env, string_class, 2, java_string_create(env, "a"));
 
        return ret.release();
