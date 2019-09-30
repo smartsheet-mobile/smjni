@@ -29,7 +29,7 @@ buildscript {
 
 def getOurVersion() {
 
-    if (file('./.git').isDirectory()) {
+    if (file('../.git').isDirectory()) {
 
         def tagStdOut = new ByteArrayOutputStream()
         exec {
