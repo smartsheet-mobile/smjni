@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,6 +21,7 @@
 #include <smjni/java_ref.h>
 #include <smjni/java_exception.h>
 
+DEFINE_JAVA_TYPE(jByteBuffer, "java.nio.ByteBuffer")
 
 namespace smjni
 {
@@ -29,33 +31,33 @@ namespace smjni
     public:
         typedef T * iterator;
         typedef const T * const_iterator;
-        typedef jsize size_type;
+        typedef jlong size_type;
         typedef T value_type;
     public:
-        java_direct_buffer(T * ptr, jsize size):
+        java_direct_buffer(T * ptr, jlong size):
             m_ptr(ptr),
             m_size(size)  
         {
         }
             
-        java_direct_buffer(JNIEnv * env, jobject obj)
+        java_direct_buffer(JNIEnv * env, const auto_java_ref<jByteBuffer> & obj)
         {
-            m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj));
+            m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj.c_ptr()));
             if (!m_ptr)
             {
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            jsize byte_size = env->GetDirectBufferCapacity(obj);
+            jlong byte_size = env->GetDirectBufferCapacity(obj.c_ptr());
             if (byte_size == -1)
             {
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            m_size = byte_size / sizeof(T);
+            m_size = byte_size / jlong(sizeof(T));
         }
         
-        local_java_ref<jobject> to_java(JNIEnv * env)
+        local_java_ref<jByteBuffer> to_java(JNIEnv * env)
         {
             jobject ret = env->NewDirectByteBuffer(m_ptr, m_size * sizeof(T));
             if (!ret)
@@ -82,7 +84,7 @@ namespace smjni
         {
             return m_ptr + m_size;
         }
-        jsize size() const
+        jlong size() const
         {
             return m_size;
         }
@@ -96,7 +98,7 @@ namespace smjni
         }
     private:
         T * m_ptr = nullptr;
-        jsize m_size = 0;    
+        jlong m_size = 0;    
     };
 }
 

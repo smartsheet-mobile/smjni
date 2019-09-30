@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,6 +21,8 @@
 #include <jni.h>
 
 #include <memory>
+
+#include <smjni/config.h>
 
 namespace smjni
 {

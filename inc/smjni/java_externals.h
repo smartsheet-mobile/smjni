@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,6 +20,8 @@
 
 #include <exception>
 
+#include <smjni/config.h>
+
 namespace smjni
 {
     void set_externals(void (*thrower)(const char *, const char *, va_list), 
@@ -26,8 +29,13 @@ namespace smjni
     
     namespace internal
     {
+#if defined (__GNUC__)
         [[noreturn]] void do_throw_problem(const char * file_line, const char * format, ...) __attribute__((format (printf, 2, 3)));
         void do_log_error(const std::exception & ex, const char * format, ...) noexcept __attribute__((format (printf, 2, 3)));
+#elif defined(_WIN32)
+        [[noreturn]] void do_throw_problem(const char * file_line, _In_z_ _Printf_format_string_ const char * format, ...);
+        void do_log_error(const std::exception & ex, _In_z_ _Printf_format_string_ const char * format, ...) noexcept;
+#endif
     }
 }
 

@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -39,22 +40,18 @@ void smjni::set_externals(void (*thrower)(const char *, const char *, va_list),
 
 static std::string print_to_string(const char * format, va_list vl)
 {
-    struct cleaner
-    {
-        void operator()(char * p)
-        {
-            free(p);
-        }
-    };
-    
-    char * buf = nullptr;
-    vasprintf(&buf, format, vl);
-    if (buf)
-    {
-        std::unique_ptr<char, cleaner> buf_holder(buf);
-        return std::string(buf_holder.get());
-    }
-    return std::string();
+    va_list vlOrig;
+    va_copy(vlOrig, vl);
+    auto size = vsnprintf(nullptr, 0, format, vl);
+    if (size <= 0)
+        return std::string();
+    std::string buf(size + 1, '\0');
+    size = vsnprintf(&buf[0], buf.size(), format, vlOrig);
+    va_end(vlOrig);
+    if (size <= 0)
+        return std::string();
+    buf.resize(size);
+    return buf;
 }
 
 [[noreturn]] void smjni::internal::do_throw_problem(const char * file_line, const char * format, ...)

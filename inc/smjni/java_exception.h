@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,8 +28,8 @@ namespace smjni
     class java_exception final : public std::exception
     {
     public:
-        java_exception(jthrowable ex) noexcept :
-            m_throwable(jglobal_ref(ex))
+        java_exception(const auto_java_ref<jthrowable> & ex) noexcept :
+            m_throwable(ex)
         {
             
         }
@@ -57,9 +58,9 @@ namespace smjni
             }
         }
         
-        static void raise(JNIEnv * jenv, jthrowable jex)
+        static void raise(JNIEnv * jenv, const auto_java_ref<jthrowable> & jex)
         {
-            jint res = jenv->Throw(jex);
+            jint res = jenv->Throw(jex.c_ptr());
             if (res != 0)
                 THROW_JAVA_PROBLEM("Cannot throw java exception");
         }

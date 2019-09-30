@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,7 +20,23 @@
 
 #include <jni.h>
 
-#include <pthread.h>
+#if __has_include(<pthread.h>)
+
+    #include <pthread.h>
+    #define USE_PTHREADS 1
+
+#elif __has_include(<windows.h>)
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <windows.h>
+
+    #define USE_WINTHREADS 1
+
+#else
+
+    #error Please define threading for your platform
+
+#endif
 
 #include <memory>
 #include <mutex>

@@ -1,5 +1,6 @@
 /*
- Copyright 2014 Smartsheet.com, Inc.
+ Copyright 2014 Smartsheet Inc.
+ Copyright 2019 SmJNI Contributors
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -47,6 +48,11 @@ namespace smjni
         typedef Traits traits;
     public:
         java_ref() noexcept:
+            traits(nullptr),
+            m_obj(nullptr)
+        {}
+
+        java_ref(std::nullptr_t) noexcept:
             traits(nullptr),
             m_obj(nullptr)
         {}
