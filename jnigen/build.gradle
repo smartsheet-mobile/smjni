@@ -53,9 +53,8 @@ allprojects {
         mavenCentral()
     }
 
-    project.ext {
-        version = getOurVersion()
-    }
+    project.version = getOurVersion()
+    project.group "smjni.jnigen"
 }
 
 
