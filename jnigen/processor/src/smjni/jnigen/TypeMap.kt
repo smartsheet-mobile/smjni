@@ -171,14 +171,14 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
     internal fun wrapperNameOf(type: TypeMirror, isArgument: Boolean) : String {
         return when (val rawType = nativeNameOf(type)) {
 
-            "jboolean"    -> "bool"
-            "jbyte"       -> "int8_t"
-            "jchar"       -> "char16_t"
-            "jshort"      -> "int16_t"
-            "jint"        -> "int32_t"
-            "jlong"       -> "int64_t"
-            "jfloat"      -> "float"
-            "jdouble"     -> "double"
+            "jboolean"    -> "jboolean"
+            "jbyte"       -> "jbyte"
+            "jchar"       -> "jchar"
+            "jshort"      -> "jshort"
+            "jint"        -> "jint"
+            "jlong"       -> "jlong"
+            "jfloat"      -> "jfloat"
+            "jdouble"     -> "jdouble"
             "void"        -> "void"
             else -> {
                 if (isArgument)
