@@ -41,7 +41,7 @@ import static java.lang.annotation.ElementType.TYPE;
  * The parameters of this annotation allow you to customize code generation process
  */
 @Target(value = {TYPE})
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 public @interface ExposeToNative {
 
     /**
