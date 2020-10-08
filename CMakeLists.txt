@@ -59,15 +59,15 @@ add_library(smjni STATIC
     inc/smjni/utf_util.h
 )
 
-set_property(TARGET smjni PROPERTY CXX_STANDARD 14)
+set_property(TARGET smjni PROPERTY CXX_STANDARD 17)
 set_property(TARGET smjni PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjni PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjni PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 
 target_compile_options(smjni 
     PUBLIC 
-    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++17-compat-mangling>
-    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++17-compat-mangling>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2a-extensions>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++2a-extensions>
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>
 
     PRIVATE
