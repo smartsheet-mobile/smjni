@@ -23,12 +23,10 @@
 
 #include <smjni/jni_provider.h>
 #include <smjni/java_externals.h>
+#include <smjni/java_cast.h>
 
 namespace smjni
 {
-    template<typename Dest, typename Source>
-    Dest jstatic_cast(Source src);
-
     template<typename T, typename Traits>
     class java_ref;
     
@@ -58,7 +56,8 @@ namespace smjni
         {}
         
         template<typename X>
-        java_ref(X * ptr, typename std::enable_if<Traits::allow_conversion, X *>::type = nullptr):
+        java_ref(X * ptr, typename std::enable_if_t<Traits::allow_conversion &&
+                                                    is_java_castable_v<X *, T>, void *> = nullptr) noexcept:
             traits(nullptr),
             m_obj(this->new_ref(jstatic_cast<T>(ptr)))
         {}
@@ -80,6 +79,14 @@ namespace smjni
         {
             src.m_obj = nullptr;
         }
+        template<typename Y>
+        java_ref(java_ref<Y, Traits> && src) noexcept:
+            traits(std::move(static_cast<traits &>(src))),
+            m_obj(jstatic_cast<T>(src.m_obj))
+        {
+            src.m_obj = nullptr;
+        }
+
         java_ref & operator=(const java_ref & src) 
         {
             java_ref(src).swap(*this);
@@ -94,8 +101,19 @@ namespace smjni
         java_ref & operator=(java_ref && src) noexcept
         {
             this->delete_ref();
+            this->m_obj = nullptr;
             static_cast<traits &>(*this) = std::move(static_cast<traits &>(src));
             this->m_obj = src.m_obj;
+            src.m_obj = nullptr;
+            return *this;
+        }
+        template<typename Y>
+        java_ref & operator=(java_ref<Y, Traits> && src) noexcept
+        {
+            this->delete_ref();
+            this->m_obj = nullptr;
+            static_cast<traits &>(*this) = std::move(static_cast<traits &>(src));
+            this->m_obj = jstatic_cast<T>(src.m_obj);
             src.m_obj = nullptr;
             return *this;
         }
@@ -110,13 +128,13 @@ namespace smjni
             swap(m_obj, other.m_obj); 
         }
             
-        auto c_ptr() const noexcept -> decltype(traits::c_ptr(T(nullptr))) 
+        decltype(auto) c_ptr() const noexcept 
             { return traits::c_ptr(this->m_obj); }
         
         explicit operator bool() const noexcept
             { return this->m_obj != nullptr; }
         
-        auto release() noexcept -> decltype(traits::c_ptr(T(nullptr))) 
+        decltype(auto) release() noexcept 
         {
             T ret = this->m_obj;
             this->m_obj = 0;
@@ -164,7 +182,7 @@ namespace smjni
     
     template<typename T, typename Traits>
     inline
-    void swap(java_ref<T, Traits> & lhs, java_ref<T, Traits> & rhs)
+    void swap(java_ref<T, Traits> & lhs, java_ref<T, Traits> & rhs) noexcept
     {
         lhs.swap(rhs);
     }
@@ -189,7 +207,7 @@ namespace smjni
 
         struct auto_ref_traits : public java_ref_traits
         {
-            static const bool allow_conversion = true;
+            static constexpr bool allow_conversion = true;
             
             auto_ref_traits(JNIEnv * env = nullptr) noexcept
             {}
@@ -211,7 +229,7 @@ namespace smjni
         class local_ref_traits : public java_ref_traits
         {
         public:
-            static const bool allow_conversion = false;
+            static constexpr bool allow_conversion = false;
             
             local_ref_traits(JNIEnv * env = nullptr) noexcept : m_env(env)
             {}
@@ -235,7 +253,7 @@ namespace smjni
 
         struct global_ref_traits : public java_ref_traits
         {
-            static const bool allow_conversion = false;
+            static constexpr bool allow_conversion = false;
             
             global_ref_traits(JNIEnv * env = nullptr)
             {}
@@ -256,7 +274,7 @@ namespace smjni
 
         struct weak_ref_traits : public java_ref_traits
         {
-            static const bool allow_conversion = false;
+            static constexpr bool allow_conversion = false;
             
             weak_ref_traits(JNIEnv * env = nullptr)
             {}

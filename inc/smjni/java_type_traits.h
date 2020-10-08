@@ -22,6 +22,7 @@
 
 #include <smjni/java_ref.h>
 #include <smjni/java_types.h>
+#include <smjni/java_cast.h>
 
 namespace smjni
 {
@@ -392,63 +393,6 @@ HANDLE_OBJECT_ARRAY_JAVA_TYPE(jobject);
         typedef _##type##Array * type##Array;\
         HANDLE_OBJECT_ARRAY_JAVA_TYPE(type)
 
-namespace smjni
-{
-    template<typename Dest, typename Source>
-    struct java_cast
-    {
-        Dest operator()(Source src)
-        {
-            static_assert(std::is_convertible<typename std::remove_pointer<Source>::type, 
-                                              typename std::remove_pointer<jobject>::type>::value, 
-                          "Not a Java type");
-            static_assert(std::is_convertible<typename std::remove_pointer<Source>::type, 
-                                              typename std::remove_pointer<Dest>::type>::value, 
-                          "Java types are not compatible");
-            return src;
-        }
 
-    };
-
-    template<typename Dest>
-    struct java_cast<Dest, jobject>
-    {
-        Dest operator()(jobject src)
-        {
-            static_assert(std::is_convertible<typename std::remove_pointer<Dest>::type, 
-                                              typename std::remove_pointer<jobject>::type>::value, 
-                          "Not a Java type");
-            return static_cast<Dest>(src);
-        }
-    };
-
-    template<typename Dest, typename Source>
-    inline
-    Dest jstatic_cast(Source src)
-    {
-        return java_cast<Dest, Source>()(src);
-    }
-}
-
-#define DEFINE_JAVA_CONVERSION(T1, T2) \
-    namespace smjni\
-    {\
-        template<> \
-        struct java_cast<T1, T2> \
-        {\
-            T1 operator()(T2 src)\
-            {\
-                return static_cast<T1>(static_cast<jobject>(src));\
-            }\
-        };\
-        template<> \
-        struct java_cast<T2, T1> \
-        {\
-            T2 operator()(T1 src)\
-            {\
-                return static_cast<T2>(static_cast<jobject>(src));\
-            }\
-        };\
-    }
 
 #endif //HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
