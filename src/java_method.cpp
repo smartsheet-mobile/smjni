@@ -19,7 +19,7 @@
 
 using namespace smjni;
 
-std::string java_method_core::get_signature(size_t count, const std::string * sigs)
+std::string java_method_core::get_signature(size_t count, const char * sigs[])
 {
     std::string ret = "(";
     for(size_t i = 1; i < count; ++i)

@@ -39,8 +39,8 @@ namespace smjni
         java_field_core & operator=(const java_field_core &) noexcept = default;
         java_field_core & operator=(java_field_core &&) noexcept = default;
     
-        static jfieldID get_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
-        static jfieldID get_static_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
+        static jfieldID get_field_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
+        static jfieldID get_static_field_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
         
     protected:
         jfieldID m_id;
@@ -53,7 +53,7 @@ namespace smjni
         typedef Type field_type;
         typedef typename java_type_traits<Type>::return_type return_type;
     public:
-        static std::string get_signature()
+        static const char * get_signature()
         {
             return java_type_traits<Type>::signature();
         }

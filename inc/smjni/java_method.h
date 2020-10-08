@@ -27,7 +27,7 @@ namespace smjni
     class java_method_core
     {
     public:
-        static std::string get_signature(size_t count, const std::string * sigs);
+        static std::string get_signature(size_t count, const char * sigs[]);
     protected:
         java_method_core() noexcept : m_id(0)
         {
@@ -64,7 +64,7 @@ namespace smjni
         
         static std::string get_signature()
         {
-            std::string sigs[sizeof...(ArgType) + 1] = 
+            const char * sigs[sizeof...(ArgType) + 1] = 
                 { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
             return java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
         }

@@ -46,7 +46,7 @@ namespace smjni
         template<typename ReturnType, typename... ArgType>
         void add_static_method(const char * name, ReturnType (JNICALL *func)(JNIEnv *, jclass, ArgType...))
         {
-            std::string sigs[sizeof...(ArgType) + 1] = 
+            const char * sigs[sizeof...(ArgType) + 1] = 
                 { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
             std::string signature = java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
         
@@ -56,7 +56,7 @@ namespace smjni
         template<typename ReturnType, typename... ArgType>
         void add_instance_method(const char * name, ReturnType (JNICALL *func)(JNIEnv *, T, ArgType...))
         {
-            std::string sigs[sizeof...(ArgType) + 1] = 
+            const char * sigs[sizeof...(ArgType) + 1] = 
                 { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
             std::string signature = java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
         

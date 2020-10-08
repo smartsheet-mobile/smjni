@@ -189,18 +189,6 @@ namespace smjni
     
     namespace internal
     {
-        template<typename Traits, typename T>
-        inline java_ref<T, Traits> new_java_ref(JNIEnv * env, T ptr)
-        {
-            return java_ref<T, Traits>(env, ptr);
-        }
-
-        template<typename Traits, typename T>
-        inline java_ref<T, Traits> attach_java_ref(JNIEnv * env, T ptr)
-        {
-            return java_ref<T, Traits>(env, ptr, java_ref<T, Traits>::attach);
-        }
-
         struct java_ref_traits
         {
         };
@@ -292,6 +280,18 @@ namespace smjni
             friend void swap(weak_ref_traits & lhs, weak_ref_traits & rhs) noexcept
             {}
         };
+
+        template<typename Traits, typename T>
+        inline java_ref<T, Traits> new_java_ref(JNIEnv * env, T ptr)
+        {
+            return java_ref<T, Traits>(env, ptr);
+        }
+
+        template<typename Traits, typename T>
+        inline java_ref<T, Traits> attach_java_ref(JNIEnv * env, T ptr)
+        {
+            return java_ref<T, Traits>(env, ptr, java_ref<T, Traits>::attach);
+        }
     }
     
     

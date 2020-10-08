@@ -18,7 +18,7 @@
 #ifndef HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 #define HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 
-#include <string>
+#include <array>
 
 #include <smjni/java_ref.h>
 #include <smjni/java_types.h>
@@ -32,7 +32,7 @@ namespace smjni
         if (sizeof(size_t) >= sizeof(jsize))
         {
             if (size > std::numeric_limits<jsize>::max())
-                abort();
+                std::terminate();
             
         }
         return jsize(size);
@@ -41,11 +41,11 @@ namespace smjni
     SMJNI_FORCE_INLINE size_t java_size_to_cpp(jsize size)
     {
         if (size < 0)
-            abort();
+            std::terminate();
         if (sizeof(size_t) < sizeof(jsize))
         {
             if (size > std::numeric_limits<size_t>::max())
-                abort();
+                std::terminate();
             
         }
         return size_t(size);
@@ -62,21 +62,34 @@ namespace smjni
         { return jattach(env, val); }
 
 
-    inline std::string object_signature_from_name(const char * name)
+    template<size_t N>
+    constexpr inline std::array<char, N + 2> object_signature_from_name(const char (&name)[N])
     {
-        std::string ret = "L";
-        for(const char * p = name; *p; ++p) 
-            ret += (*p != '.' ? *p : '/'); 
-        ret += ';';
+        std::array<char, N + 2> ret;
+        ret[0] = 'L';
+        for(size_t i = 0; i < N - 1; ++i) 
+        {
+            const char c = name[i];
+            ret[i + 1] += (c != '.' ? c : '/'); 
+        }
+        ret[N] =  ';';
+        ret[N + 1] = '\0';
         return ret;
     }
 
-    inline std::string array_signature_from_name(const char * name)
+    template<size_t N>
+    constexpr inline std::array<char, N + 3> array_signature_from_name(const char (&name)[N])
     {
-        std::string ret = "[L";
-        for(const char * p = name; *p; ++p) 
-            ret += (*p != '.' ? *p : '/'); 
-        ret += ';';
+        std::array<char, N + 3> ret;
+        ret[0] = '[';
+        ret[1] = 'L';
+        for(size_t i = 0; i < N - 1; ++i) 
+        {
+            const char c = name[i];
+            ret[i + 2] += (c != '.' ? c : '/'); 
+        }
+        ret[N + 1] =  ';';
+        ret[N + 2] = '\0';
         return ret;
     }
     
@@ -100,7 +113,7 @@ namespace smjni
         java_type_traits(const java_type_traits &) = delete;
         java_type_traits & operator=(const java_type_traits &) = delete;
 
-        static std::string signature()
+        static constexpr const char * signature()
         {
             return "V";
         }
@@ -145,7 +158,7 @@ namespace smjni
             java_type_traits(const java_type_traits &) = delete; \
             java_type_traits & operator=(const java_type_traits &) = delete; \
             \
-            static std::string signature() \
+            static constexpr const char * signature() \
             { \
                 return sig; \
             } \
@@ -300,13 +313,13 @@ namespace smjni
         class java_type_traits<jtype> : public java_object_type_base<jtype> \
         {\
         public:\
-            static const std::string & signature()\
+            static const char * signature()\
             {\
-                static const auto the_signature = object_signature_from_name(name);\
-                return the_signature;\
+                static const auto sig = object_signature_from_name(name);\
+                return &sig[0];\
             }\
             \
-            static const char * class_name() \
+            static constexpr decltype(auto) class_name() \
             {\
                 return name;\
             }\
@@ -327,7 +340,7 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
         public:\
             typedef jtype element_type;\
             \
-            static std::string signature()\
+            static const char * signature()\
             {\
                 return sig;\
             }\
@@ -367,10 +380,10 @@ HANDLE_PRIMITIVE_ARRAY_JAVA_TYPE(jdouble,     Double,     "[D");
         public:\
             typedef jtype element_type;\
             \
-            static const std::string & signature()\
+            static const char * signature()\
             {\
-                static const auto the_signature = array_signature_from_name(java_type_traits<jtype>::class_name());\
-                return the_signature;\
+                static const auto sig = array_signature_from_name(java_type_traits<jtype>::class_name());\
+                return &sig[0];\
             }\
         };\
         template<>\
