@@ -32,6 +32,7 @@ set_property(TARGET smjnitests PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 
 target_sources(smjnitests PRIVATE
+    java_ref_tests.cpp
     smjnitests.cpp
 )
 

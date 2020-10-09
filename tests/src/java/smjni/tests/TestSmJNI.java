@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExposeToNative(className="TestSmJNI")
-class TestSmJNI {
+class TestSmJNI extends BasicTest {
 
     @ExposeToNative(typeName="jBase", className="Base")
     static class Base
@@ -68,12 +68,6 @@ class TestSmJNI {
         {
             return val + 2;
         }
-    }
-
-    @BeforeAll
-    static void setUp()
-    {
-        System.loadLibrary("smjnitests");
     }
 
     @Test

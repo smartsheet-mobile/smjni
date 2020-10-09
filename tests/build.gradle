@@ -14,6 +14,8 @@
  limitations under the License.
 */
 
+import java.util.regex.Pattern
+
 buildscript {
     repositories {
         mavenCentral()
@@ -65,6 +67,8 @@ sourceSets {
 
 task cleanStaleJNIHeaders(dependsOn: compileTestJava) {
 
+    inputs.files file("$JNIGEN_GENERATED_PATH/$JNIGEN_OUTPUT_LIST_NAME")
+
     doLast {
         def generated = new HashSet<String>()
         def outputs = file("$JNIGEN_GENERATED_PATH/$JNIGEN_OUTPUT_LIST_NAME")
@@ -99,7 +103,7 @@ task buildNative(dependsOn: cleanStaleJNIHeaders) {
             commandLine = [
                     "cmake",
                     "--build", file("build/native").toString(),
-                    "--config", "Debug",
+                    "--config", "Release",
                     "--target", "smjnitests",
                     "--target", "install"
             ]
@@ -108,4 +112,5 @@ task buildNative(dependsOn: cleanStaleJNIHeaders) {
 }
 
 project.tasks.test.dependsOn(buildNative)
+project.tasks.testClasses.dependsOn(buildNative)
 
