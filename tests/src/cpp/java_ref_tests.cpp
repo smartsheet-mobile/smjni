@@ -16,6 +16,8 @@
 
 #include <smjni/smjni.h>
 
+#include "catch.hpp"
+
 #include "test_util.h"
 
 #include <type_traits>
@@ -56,54 +58,49 @@ void ForEach(Func func)
     }
 }
 
-void JNICALL TestJavaRef::test(JNIEnv * env, jTestJavaRef)
+TEST_CASE( "testJavaRefProperties", "[javaref]" )
 {
-    NATIVE_PROLOG
+    using RefTypes = TypeList<auto_java_ref<jobject>, local_java_ref<jobject>, global_java_ref<jobject>, weak_java_ref<jobject>>;
 
-        using RefTypes = TypeList<auto_java_ref<jobject>, local_java_ref<jobject>, global_java_ref<jobject>, weak_java_ref<jobject>>;
+    ForEach<RefTypes>([] <class T>() {
 
-        ForEach<RefTypes>([env] <class T>() {
+        CHECK(std::is_default_constructible_v<T>);
+        CHECK(std::is_nothrow_default_constructible_v<T>);
 
-            ASSERT_TRUE(std::is_default_constructible_v<T>);
-            ASSERT_TRUE(std::is_nothrow_default_constructible_v<T>);
+        CHECK((std::is_constructible_v<T, std::nullptr_t>));
+        CHECK((std::is_nothrow_constructible_v<T, std::nullptr_t>));
 
-            ASSERT_TRUE((std::is_constructible_v<T, std::nullptr_t>));
-            ASSERT_TRUE((std::is_nothrow_constructible_v<T, std::nullptr_t>));
+        CHECK(std::is_copy_constructible_v<T>);
+        CHECK(std::is_nothrow_move_constructible_v<T>);
 
-            ASSERT_TRUE(std::is_copy_constructible_v<T>);
-            ASSERT_TRUE(std::is_nothrow_move_constructible_v<T>);
+        CHECK(std::is_copy_assignable_v<T>);
+        CHECK(std::is_nothrow_move_assignable_v<T>);
 
-            ASSERT_TRUE(std::is_copy_assignable_v<T>);
-            ASSERT_TRUE(std::is_nothrow_move_assignable_v<T>);
-
-            ASSERT_TRUE(std::is_nothrow_destructible_v<T>);
-            ASSERT_TRUE(std::is_nothrow_swappable_v<T>);
+        CHECK(std::is_nothrow_destructible_v<T>);
+        CHECK(std::is_nothrow_swappable_v<T>);
 
 
-        });
+    });
 
-        ASSERT_TRUE((std::is_nothrow_constructible_v<auto_java_ref<jobject>, jobject>));
-        ASSERT_FALSE((std::is_constructible_v<auto_java_ref<jobject>, int *>));
-        ASSERT_FALSE((std::is_constructible_v<local_java_ref<jobject>, jobject>));
-        ASSERT_FALSE((std::is_constructible_v<global_java_ref<jobject>, jobject>));
-        ASSERT_FALSE((std::is_constructible_v<weak_java_ref<jobject>, jobject>));
+    CHECK((std::is_nothrow_constructible_v<auto_java_ref<jobject>, jobject>));
+    CHECK_FALSE((std::is_constructible_v<auto_java_ref<jobject>, int *>));
+    CHECK_FALSE((std::is_constructible_v<local_java_ref<jobject>, jobject>));
+    CHECK_FALSE((std::is_constructible_v<global_java_ref<jobject>, jobject>));
+    CHECK_FALSE((std::is_constructible_v<weak_java_ref<jobject>, jobject>));
 
-        ForEach<RefTypes>([env] <class T>() {
+    ForEach<RefTypes>([] <class T>() {
 
-            ForEach<RefTypes>([env] <class Y>() {
+        ForEach<RefTypes>([] <class Y>() {
 
-                ASSERT_TRUE((std::is_nothrow_constructible_v<T, Y>));
-                ASSERT_TRUE((std::is_nothrow_constructible_v<T, Y&&>));
-                ASSERT_TRUE((std::is_nothrow_constructible_v<T, const Y&>));
-                ASSERT_TRUE((std::is_nothrow_constructible_v<T, Y&>));
-                ASSERT_TRUE((std::is_nothrow_constructible_v<T, const Y&&>));
-                //ASSERT_TRUE((std::is_nothrow_constructible_v<auto_java_ref<jobject>, auto_java_ref<jstring>>));
-                //ASSERT_TRUE((std::is_nothrow_constructible_v<auto_java_ref<jobject>, auto_java_ref<jstring>&&>));
-
-            });
+            CHECK((std::is_nothrow_constructible_v<T, Y>));
+            CHECK((std::is_nothrow_constructible_v<T, Y&&>));
+            CHECK((std::is_nothrow_constructible_v<T, const Y&>));
+            CHECK((std::is_nothrow_constructible_v<T, Y&>));
+            CHECK((std::is_nothrow_constructible_v<T, const Y&&>));
+            //ASSERT_TRUE((std::is_nothrow_constructible_v<auto_java_ref<jobject>, auto_java_ref<jstring>>));
+            //ASSERT_TRUE((std::is_nothrow_constructible_v<auto_java_ref<jobject>, auto_java_ref<jstring>&&>));
 
         });
 
-
-    NATIVE_EPILOG
+    });
 }

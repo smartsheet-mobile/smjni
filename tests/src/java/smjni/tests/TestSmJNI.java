@@ -15,18 +15,17 @@
 */
 
 package smjni.tests;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+
 import smjni.jnigen.CalledByNative;
 import smjni.jnigen.ExposeToNative;
-
 
 import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 @ExposeToNative(className="TestSmJNI")
-class TestSmJNI extends BasicTest {
+class TestSmJNI  {
 
     @ExposeToNative(typeName="jBase", className="Base")
     static class Base
@@ -70,9 +69,16 @@ class TestSmJNI extends BasicTest {
         }
     }
 
-    @Test
-    void testNativeMethodImplementation() {
-        assertTrue(doTestNativeMethodImplementation(true,
+    public static void main(String[] args) {
+        System.loadLibrary("smjnitests");
+        testMain(args);
+    }
+
+    private static native int testMain(String[] args);
+
+    @CalledByNative
+    private static boolean testCallingNativeMethod() {
+        return nativeMethodImplementation(true,
                      (byte)42,
                      'q',
                      (short)17,
@@ -90,27 +96,25 @@ class TestSmJNI extends BasicTest {
                      new float[] { 0.1f, 0.2f },
                      new double[] { 0.25, 0.26 },
                      new String[] { "abc" , "xyz"}
-                ));
+                );
     }
 
-    private native boolean doTestNativeMethodImplementation(boolean bl, byte b, char c, short s, int i, long l, float f, double d, String str,
+    
+    private static native boolean nativeMethodImplementation(boolean bl, byte b, char c, short s, int i, long l, float f, double d, String str,
                                      boolean[] bla, byte[] ba, char[] ca, short[] sa, int[] ia, long[] la, float[] fa, double[] da, String[] stra);
 
-    @Test
-    native void testString();
-
-    @Test
-    void testPrimitiveArray()
+    @CalledByNative
+    private static void testPrimitiveArray()
     {
         int[] array = { 1, 2, 3, 4, 5 };
         char[] res = doTestPrimitiveArray(array);
         assertArrayEquals(array, new int[] {5, 4, 3, 2, 1});
         assertArrayEquals(res, new char[] { 'a', 'b'});
     }
-    private native char[] doTestPrimitiveArray(int[] array);
+    private static native char[] doTestPrimitiveArray(int[] array);
 
-    @Test
-    void testObjectArray()
+    @CalledByNative
+    private static void testObjectArray()
     {
         String[] array = { "a", "b", "c", "d", "e" };
         String[] res = doTestObjectArray(array);
@@ -118,10 +122,10 @@ class TestSmJNI extends BasicTest {
         assertArrayEquals(res, new String[] { "a", "a"});
     }
 
-    private native String[] doTestObjectArray(String[] array);
+    private static native String[] doTestObjectArray(String[] array);
 
-    @Test
-    void testDirectBuffer()
+    @CalledByNative
+    private static void testDirectBuffer()
     {
         ByteBuffer buffer = ByteBuffer.allocateDirect(5);
         buffer.put((byte)1);
@@ -138,8 +142,5 @@ class TestSmJNI extends BasicTest {
             assertEquals(i + 1, res.get(i));
     }
 
-    private native ByteBuffer doTestDirectBuffer(ByteBuffer buffer);
-
-    @Test
-    native void testCallingJava();
+    private static native ByteBuffer doTestDirectBuffer(ByteBuffer buffer);
 }

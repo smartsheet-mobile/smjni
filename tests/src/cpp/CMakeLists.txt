@@ -14,11 +14,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.5)
-
-project(smjnitests)
-
-add_subdirectory("../../.." ${CMAKE_CURRENT_BINARY_DIR}/smjni)
+cmake_minimum_required(VERSION 3.18)
 
 add_library(smjnitests SHARED EXCLUDE_FROM_ALL)
 
@@ -31,9 +27,16 @@ set_property(TARGET smjnitests PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjnitests PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 
-target_sources(smjnitests PRIVATE
-    java_ref_tests.cpp
-    smjnitests.cpp
+target_compile_options(smjnitests 
+    PRIVATE 
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2a-extensions;-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++2a-extensions;-Wall;-Wextra;-Wno-unused-parameter>
 )
 
-install(TARGETS smjnitests DESTINATION ${CMAKE_CURRENT_LIST_DIR}/../../build/native)
+target_sources(smjnitests PRIVATE
+    integration_tests.cpp
+    java_ref_tests.cpp
+    smjnitests.cpp
+    string_tests.cpp
+)
+
