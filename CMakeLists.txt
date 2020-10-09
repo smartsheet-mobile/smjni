@@ -66,8 +66,6 @@ set_property(TARGET smjni PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 
 target_compile_options(smjni 
     PUBLIC 
-    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2a-extensions>
-    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++2a-extensions>
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>
 
     PRIVATE
