@@ -22,6 +22,7 @@
 #include <smjni/java_method.h>
 #include <smjni/java_field.h>
 #include <smjni/java_exception.h>
+#include <smjni/ct_string.h>
 
 namespace smjni
 {
@@ -119,9 +120,9 @@ namespace smjni
         template<typename T> 
         static local_java_ref<jclass> do_find(JNIEnv * jenv)
         {
-            std::string name = java_type_traits<T>::class_name();
-            for(char & c: name) 
-                if (c == '.') c ='/';
+            using internal::string_array, internal::transform;
+            static const auto name = transform(string_array(java_type_traits<T>::class_name()),
+                                               [](char c) {return (c != '.' ? c : '/');});
             return jattach(jenv, jenv->FindClass(name.c_str()));
         }
     private:
