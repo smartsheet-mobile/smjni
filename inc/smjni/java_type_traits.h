@@ -18,11 +18,12 @@
 #ifndef HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 #define HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 
-#include <array>
 
 #include <smjni/java_ref.h>
 #include <smjni/java_types.h>
 #include <smjni/java_cast.h>
+#include <smjni/java_cast.h>
+#include <smjni/ct_string.h>
 
 namespace smjni
 {
@@ -63,34 +64,17 @@ namespace smjni
 
 
     template<size_t N>
-    constexpr inline std::array<char, N + 2> object_signature_from_name(const char (&name)[N])
+    constexpr inline decltype(auto) object_signature_from_name(const char (&name)[N])
     {
-        std::array<char, N + 2> ret;
-        ret[0] = 'L';
-        for(size_t i = 0; i < N - 1; ++i) 
-        {
-            const char c = name[i];
-            ret[i + 1] += (c != '.' ? c : '/'); 
-        }
-        ret[N] =  ';';
-        ret[N + 1] = '\0';
-        return ret;
+        using internal::string_array;
+        return string_array("L") + transform(string_array(name), [](char c) {return (c != '.' ? c : '/');}) + string_array(";");
     }
 
     template<size_t N>
-    constexpr inline std::array<char, N + 3> array_signature_from_name(const char (&name)[N])
+    constexpr inline decltype(auto) array_signature_from_name(const char (&name)[N])
     {
-        std::array<char, N + 3> ret;
-        ret[0] = '[';
-        ret[1] = 'L';
-        for(size_t i = 0; i < N - 1; ++i) 
-        {
-            const char c = name[i];
-            ret[i + 2] += (c != '.' ? c : '/'); 
-        }
-        ret[N + 1] =  ';';
-        ret[N + 2] = '\0';
-        return ret;
+        using internal::string_array;
+        return string_array("[") + object_signature_from_name(name);
     }
     
 
@@ -113,9 +97,9 @@ namespace smjni
         java_type_traits(const java_type_traits &) = delete;
         java_type_traits & operator=(const java_type_traits &) = delete;
 
-        static constexpr const char * signature()
+        static constexpr decltype(auto) signature()
         {
-            return "V";
+            return internal::string_array("V");
         }
 
         static void call_method(JNIEnv * jenv, jobject object, jmethodID method, ...)
@@ -158,9 +142,9 @@ namespace smjni
             java_type_traits(const java_type_traits &) = delete; \
             java_type_traits & operator=(const java_type_traits &) = delete; \
             \
-            static constexpr const char * signature() \
+            static constexpr decltype(auto) signature() \
             { \
-                return sig; \
+                return internal::string_array(sig); \
             } \
             \
             static jtype call_method(JNIEnv * jenv, jobject object, jmethodID method, ...) \
@@ -313,10 +297,9 @@ namespace smjni
         class java_type_traits<jtype> : public java_object_type_base<jtype> \
         {\
         public:\
-            static const char * signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                static const auto sig = object_signature_from_name(name);\
-                return &sig[0];\
+                return object_signature_from_name(name); \
             }\
             \
             static constexpr decltype(auto) class_name() \
@@ -340,9 +323,9 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
         public:\
             typedef jtype element_type;\
             \
-            static const char * signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                return sig;\
+                return internal::string_array(sig); \
             }\
             static void release_array_elements(JNIEnv * env, jtype##Array ar, jtype * data, jint flags)\
             {\
@@ -380,10 +363,9 @@ HANDLE_PRIMITIVE_ARRAY_JAVA_TYPE(jdouble,     Double,     "[D");
         public:\
             typedef jtype element_type;\
             \
-            static const char * signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                static const auto sig = array_signature_from_name(java_type_traits<jtype>::class_name());\
-                return &sig[0];\
+                return array_signature_from_name(java_type_traits<jtype>::class_name()); \
             }\
         };\
         template<>\

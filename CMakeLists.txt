@@ -39,6 +39,7 @@ add_library(smjni STATIC
     src/jni_provider.cpp
 
     inc/smjni/config.h
+    inc/smjni/ct_string.h
     inc/smjni/java_array.h
     inc/smjni/java_class_table.h
     inc/smjni/java_class.h

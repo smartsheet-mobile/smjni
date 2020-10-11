@@ -21,13 +21,12 @@
 #include <smjni/java_type_traits.h>
 #include <smjni/java_class.h>
 #include <smjni/java_exception.h>
+#include <smjni/ct_string.h>
 
 namespace smjni
 {
     class java_method_core
     {
-    public:
-        static std::string get_signature(size_t count, const char * sigs[]);
     protected:
         java_method_core() noexcept : m_id(0)
         {
@@ -41,8 +40,8 @@ namespace smjni
         java_method_core & operator=(const java_method_core &) noexcept = default;
         java_method_core & operator=(java_method_core &&) noexcept = default;
         
-        static jmethodID get_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
-        static jmethodID get_static_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
+        static jmethodID get_method_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
+        static jmethodID get_static_method_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
         
     protected:
         jmethodID m_id;
@@ -51,6 +50,13 @@ namespace smjni
     template<typename ReturnType, typename... ArgType>
     class java_method_base : public java_method_core
     {
+    public:
+        static const char * get_signature()
+        {
+            using internal::string_array;
+            static constexpr const auto sig = (string_array("(") + ... + java_type_traits<ArgType>::signature()) + string_array(")") + java_type_traits<ReturnType>::signature();
+            return sig.c_str();
+        }
     protected:
         java_method_base(jmethodID id):
             java_method_core(id)
@@ -60,14 +66,7 @@ namespace smjni
         java_method_base(const java_method_base &) noexcept = default;
         java_method_base(java_method_base &&) noexcept = default;
         java_method_base & operator=(const java_method_base &) noexcept = default;
-        java_method_base & operator=(java_method_base &&) noexcept = default;    
-        
-        static std::string get_signature()
-        {
-            const char * sigs[sizeof...(ArgType) + 1] = 
-                { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
-            return java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
-        }
+        java_method_base & operator=(java_method_base &&) noexcept = default;
     };
     
     template<typename ReturnType, typename ThisType, typename... ArgType>

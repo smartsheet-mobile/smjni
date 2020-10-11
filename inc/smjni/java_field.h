@@ -55,7 +55,9 @@ namespace smjni
     public:
         static const char * get_signature()
         {
-            return java_type_traits<Type>::signature();
+            using internal::string_array;
+            static constexpr const auto sig = java_type_traits<Type>::signature();
+            return sig.c_str();
         }
         
     protected:

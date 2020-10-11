@@ -29,7 +29,7 @@ namespace smjni
     private:
         typedef std::tuple<std::string, std::string, void*> entry;
     protected:
-        void add_method(const char * name, const std::string & signature, void * func)
+        void add_method(const char * name, const char * signature, void * func)
         {
             m_entries.emplace_back(entry(name, signature, func));
         }
@@ -46,20 +46,14 @@ namespace smjni
         template<typename ReturnType, typename... ArgType>
         void add_static_method(const char * name, ReturnType (JNICALL *func)(JNIEnv *, jclass, ArgType...))
         {
-            const char * sigs[sizeof...(ArgType) + 1] = 
-                { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
-            std::string signature = java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
-        
+            const char * signature = java_method_base<ReturnType, ArgType...>::get_signature();
             java_registration_base::add_method(name, signature, reinterpret_cast<void*>(func));
         }
         
         template<typename ReturnType, typename... ArgType>
         void add_instance_method(const char * name, ReturnType (JNICALL *func)(JNIEnv *, T, ArgType...))
         {
-            const char * sigs[sizeof...(ArgType) + 1] = 
-                { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
-            std::string signature = java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
-        
+            const char * signature = java_method_base<ReturnType, ArgType...>::get_signature();
             java_registration_base::add_method(name, signature, reinterpret_cast<void*>(func));
         }
         
