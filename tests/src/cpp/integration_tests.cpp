@@ -20,6 +20,8 @@
 
 #include "test_util.h"
 
+#include <thread>
+
 using namespace smjni;
 
 TEST_CASE( "testCallingNativeMethod", "[integration]" )
@@ -107,7 +109,7 @@ jboolean JNICALL TestSmJNI::nativeMethodImplementation(JNIEnv * env, jclass, jbo
     return java_false;
 }
 
-TEST_CASE( "testCallingJava", "[integration]" )
+static void doTestCallingJava()
 {
     JNIEnv * env = jni_provider::get_jni();
     auto derived_class = java_classes::get<Derived>();
@@ -122,12 +124,22 @@ TEST_CASE( "testCallingJava", "[integration]" )
     CHECK(15 == base_class.get_staticValue(env));
     base_class.set_staticValue(env, -15);
     CHECK(-15 == base_class.get_staticValue(env));
+    base_class.set_staticValue(env, 15);
 
     CHECK(74 == base_class.staticMethod(env, 74));
 
     CHECK(5 == base_class.instanceMethod(env, derived, 3));
 
     CHECK(4 == base_class.instanceMethod(env, derived, base_class, 3));
+}
+
+TEST_CASE( "testCallingJava", "[integration]" )
+{
+    doTestCallingJava();
+    
+    std::thread anotherThread(doTestCallingJava);
+    
+    anotherThread.join();
 }
 
 
