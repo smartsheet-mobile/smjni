@@ -53,7 +53,7 @@ void ForEach(Func func)
     }
     else
     {
-        func.operator()((typename TL::Head *)nullptr);
+        func((typename TL::Head *)nullptr);
         ForEach<typename TL::Tail>(func);
     }
 }
@@ -64,7 +64,7 @@ TEST_CASE( "testJavaRefProperties", "[javaref]" )
 
     ForEach<RefTypes>([] (auto * p) {
 
-        using T = decltype(p);
+        using T = std::decay_t<decltype(*p)>;
 
         CHECK(std::is_default_constructible_v<T>);
         CHECK(std::is_nothrow_default_constructible_v<T>);
@@ -91,19 +91,15 @@ TEST_CASE( "testJavaRefProperties", "[javaref]" )
     CHECK_FALSE((std::is_constructible_v<weak_java_ref<jobject>, jobject>));
 
     
-    weak_java_ref<jobject> zob;
-    global_java_ref<jobject> bob(zob);
-
     ForEach<RefTypes>([] (auto * p) {
 
-        using T = decltype(p);
+        using T = std::decay_t<decltype(*p)>;
 
         ForEach<RefTypes>([] (auto * y) {
 
-            using Y = decltype(y);
+            using Y = std::decay_t<decltype(*y)>;
 
-            std::cout << typeid(T).name() << " from " << typeid(Y).name() << '\n';
-
+            INFO("Conversion to " << demangle(typeid(T).name()) << "\nfrom " << demangle(typeid(Y).name()));
             CHECK((std::is_nothrow_constructible_v<T, Y>));
             CHECK((std::is_nothrow_constructible_v<T, Y&&>));
             CHECK((std::is_nothrow_constructible_v<T, const Y&>));

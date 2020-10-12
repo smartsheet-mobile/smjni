@@ -8,15 +8,6 @@
 #define STRINGIFY(name) STRINGIFY_IMPL(name)
 #define STRINGIFY_IMPL(name) #name
 
-#define THROW_ASSERTION_FAILURE(message) throw java_exception(java_classes::get<AssertionError>().ctor(env, java_string_create(env, message " at " __FILE__ ":" STRINGIFY(__LINE__))))
-
-#define ASSERT_TRUE(x) if (!(x)) \
-    THROW_ASSERTION_FAILURE(STRINGIFY(x) " is false, expected true")
-#define ASSERT_FALSE(x) if (x) \
-    THROW_ASSERTION_FAILURE(STRINGIFY(x) " is true, expected false")
-#define ASSERT_EQUAL(expected, actual) if ((expected) != (actual)) \
-    THROW_ASSERTION_FAILURE(STRINGIFY(expected) " != " STRINGIFY(actual));
-
 #define NATIVE_PROLOG  try {
 #define NATIVE_EPILOG  } \
                        catch(java_exception & ex) \
@@ -27,6 +18,8 @@
                        {\
                            java_exception::translate(env, ex);\
                        }
+
+std::string demangle(const char* name);
 
 class AssertionError : public smjni::java_runtime::simple_java_class<jAssertionError>
 {

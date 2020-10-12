@@ -29,7 +29,7 @@ namespace smjni
                      &&
                      std::is_convertible_v<typename std::remove_pointer_t<Source>, 
                                            typename std::remove_pointer_t<Dest>>,
-    Dest> jstatic_cast(Source src)
+    Dest> jstatic_cast(Source src) noexcept
     {
         return src;
     }
@@ -38,7 +38,7 @@ namespace smjni
     inline
     std::enable_if_t<std::is_convertible_v<typename std::remove_pointer_t<Dest>, 
                                            typename std::remove_pointer_t<jobject>>,
-    Dest> jstatic_cast(jobject src)
+    Dest> jstatic_cast(jobject src) noexcept
     {
         return static_cast<Dest>(src);
     }

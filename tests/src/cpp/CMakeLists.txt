@@ -34,10 +34,15 @@ target_compile_options(smjnitests
     $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
 )
 
+file(GLOB GENERATED_FILES CONFIGURE_DEPENDS generated/*.h)
+
 target_sources(smjnitests PRIVATE
     integration_tests.cpp
     java_ref_tests.cpp
     smjnitests.cpp
     string_tests.cpp
+    test_util.h
+    catch.hpp
+    ${GENERATED_FILES}
 )
 
