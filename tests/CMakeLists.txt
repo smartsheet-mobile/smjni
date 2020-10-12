@@ -29,8 +29,8 @@ add_custom_target(javabuild
 
 add_dependencies(smjnitests javabuild)
 
-add_custom_target(jar  
-    COMMAND cp $<TARGET_FILE:smjnitests> ${CMAKE_CURRENT_BINARY_DIR}/java
+add_custom_target(jar ALL
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:smjnitests> ${CMAKE_CURRENT_BINARY_DIR}/java
     COMMAND ${CMAKE_CURRENT_LIST_DIR}/gradlew -PbuildDir=${CMAKE_CURRENT_BINARY_DIR}/java assemble
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )

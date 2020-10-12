@@ -44,6 +44,9 @@ namespace smjni
     template<typename Y, typename YTraits> friend class java_ref;
     private:
         typedef Traits traits;
+
+        template<typename X>
+        using allow_conversion_from = typename Traits:: template allow_conversion_from<X>;
     public:
         java_ref() noexcept:
             traits(nullptr),
@@ -54,10 +57,12 @@ namespace smjni
             traits(nullptr),
             m_obj(nullptr)
         {}
+
+        
         
         template<typename X>
-        java_ref(X * ptr, typename std::enable_if_t<Traits::allow_conversion &&
-                                                    is_java_castable_v<X *, T>, void *> = nullptr) noexcept:
+        java_ref(X * ptr, std::enable_if_t<allow_conversion_from<X *>::value &&
+                                           is_java_castable_v<X *, T>, void *> = nullptr) noexcept:
             traits(nullptr),
             m_obj(this->new_ref(jstatic_cast<T>(ptr)))
         {}
@@ -68,7 +73,7 @@ namespace smjni
         {}
         
         template<typename Y, typename YTraits>
-        java_ref(const java_ref<Y, YTraits> & src) noexcept:
+        java_ref(const java_ref<Y, YTraits> & src, std::enable_if_t<is_java_castable_v<Y, T>, void*> = nullptr) noexcept:
             traits(src),
             m_obj(this->new_ref(jstatic_cast<T>(src.c_ptr())))
         {}
@@ -80,7 +85,7 @@ namespace smjni
             src.m_obj = nullptr;
         }
         template<typename Y>
-        java_ref(java_ref<Y, Traits> && src) noexcept:
+        java_ref(java_ref<Y, Traits> && src, std::enable_if_t<is_java_castable_v<Y, T>, void*> = nullptr) noexcept:
             traits(std::move(static_cast<traits &>(src))),
             m_obj(jstatic_cast<T>(src.m_obj))
         {
@@ -93,7 +98,8 @@ namespace smjni
             return *this;
         }
         template<typename Y, typename YTraits>
-        java_ref & operator=(const java_ref<Y, YTraits> & src) 
+        std::enable_if_t < is_java_castable_v<Y, T>, 
+        java_ref> & operator=(const java_ref<Y, YTraits> & src)
         {
             java_ref(src).swap(*this);
             return *this;
@@ -108,7 +114,8 @@ namespace smjni
             return *this;
         }
         template<typename Y>
-        java_ref & operator=(java_ref<Y, Traits> && src) noexcept
+        std::enable_if_t < is_java_castable_v<Y, T>,
+        java_ref> & operator=(java_ref<Y, Traits> && src) noexcept
         {
             this->delete_ref();
             this->m_obj = nullptr;
@@ -195,7 +202,9 @@ namespace smjni
 
         struct auto_ref_traits : public java_ref_traits
         {
-            static constexpr bool allow_conversion = true;
+            //MSVC needs dependent constant for enable_if
+            template<class X>
+            using allow_conversion_from = std::is_same<X, X>; //dependent true
             
             auto_ref_traits(JNIEnv * env = nullptr) noexcept
             {}
@@ -217,7 +226,9 @@ namespace smjni
         class local_ref_traits : public java_ref_traits
         {
         public:
-            static constexpr bool allow_conversion = false;
+            //MSVC needs dependent constant for enable_if
+            template<class X>
+            using allow_conversion_from = std::is_same<X *, class nonexistent>; //dependent false
             
             local_ref_traits(JNIEnv * env = nullptr) noexcept : m_env(env)
             {}
@@ -241,7 +252,9 @@ namespace smjni
 
         struct global_ref_traits : public java_ref_traits
         {
-            static constexpr bool allow_conversion = false;
+            //MSVC needs dependent constant for enable_if
+            template<class X>
+            using allow_conversion_from = std::is_same<X*, class nonexistent>; //dependent false
             
             global_ref_traits(JNIEnv * env = nullptr)
             {}
@@ -262,7 +275,9 @@ namespace smjni
 
         struct weak_ref_traits : public java_ref_traits
         {
-            static constexpr bool allow_conversion = false;
+            //MSVC needs dependent constant for enable_if
+            template<class X>
+            using allow_conversion_from = std::is_same<X*, class nonexistent>; //dependent false
             
             weak_ref_traits(JNIEnv * env = nullptr)
             {}

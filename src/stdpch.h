@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 #include <array>
+#include <iterator>
 
 
 #endif //HEADER_STDPCH_H_INCLUDED

@@ -29,8 +29,9 @@ set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 
 target_compile_options(smjnitests 
     PRIVATE 
-    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2a-extensions;-Wall;-Wextra;-Wno-unused-parameter>
-    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-c++2a-extensions;-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4;/wd4100;/wd4127>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
 )
 
 target_sources(smjnitests PRIVATE

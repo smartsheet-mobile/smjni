@@ -19,6 +19,8 @@
 #define HEADER_CT_StRING_H_INCLUDED
 
 #include <utility>
+#include <cassert>
+#include <type_traits>
 
 namespace smjni
 {
@@ -94,11 +96,11 @@ namespace smjni
             constexpr std::size_t size() const
                 { return N; }
             
-            template<int N1, template<int> class Impl1, template<int> class Impl2>
-            constexpr string_array(const string_array<N1,Impl1> & s1, const string_array<N - N1, Impl2> & s2):
-                super{s1.impl(), s2.impl(),
-                    std::make_integer_sequence<int, N1>(),
-                    std::make_integer_sequence<int, N - N1>() }
+            template<int N1, int N2, template<int> class Impl1, template<int> class Impl2>
+            constexpr string_array(const string_array<N1,Impl1> & s1, const string_array<N2, Impl2> & s2):
+                super(s1.impl(), s2.impl(),
+                      std::make_integer_sequence<int, N1>(),
+                      std::make_integer_sequence<int, (assert(N2 == N - N1),N2)>() )
             {
             }
             

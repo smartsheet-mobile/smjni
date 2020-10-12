@@ -19,6 +19,8 @@
 #include <smjni/java_string.h>
 #include <smjni/java_type_traits.h>
 
+#include <iterator>
+
 using namespace smjni;
 
 local_java_ref<jstring> smjni::java_string_create(JNIEnv * env, const char * str)

@@ -18,6 +18,7 @@
 #include "stdpch.h"
 
 #include <vector>
+#include <iterator>
 
 #include <smjni/java_string.h>
 #include <smjni/java_exception.h>
