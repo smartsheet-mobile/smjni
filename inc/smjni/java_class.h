@@ -28,6 +28,26 @@
 
 namespace smjni
 {
+    namespace internal
+    {
+        template<typename T>
+        const char * java_field_signature()
+        {
+            using internal::string_array;
+            static constexpr const auto sig = java_type_traits<T>::signature();
+            return sig.c_str();
+        }
+    
+        template<typename ReturnType, typename... ArgType>
+        const char * java_method_signature()
+        {
+            using internal::string_array;
+            static constexpr const auto sig = (string_array("(") + ... + java_type_traits<ArgType>::signature()) + string_array(")") + java_type_traits<ReturnType>::signature();
+            return sig.c_str();
+        }
+    }
+
+
     class java_class_holder 
     { 
     public:
@@ -74,6 +94,40 @@ namespace smjni
         {
             return m_holder->is_instance_of(jenv, obj);
         }
+
+        template<typename ReturnType, typename... ArgType>
+        static JNINativeMethod bind_native(const char * name, ReturnType (JNICALL *func)(JNIEnv *, jclass, ArgType...)) noexcept
+        {
+            using name_type = decltype(JNINativeMethod::name);
+            using signature_type = decltype(JNINativeMethod::signature);
+            using method_type = decltype(JNINativeMethod::fnPtr);
+
+            const char * signature = internal::java_method_signature<ReturnType, ArgType...>();
+            return {name_type(name), signature_type(signature), (method_type)func};
+        }
+
+        template<typename ReturnType, typename... ArgType>
+        static JNINativeMethod bind_native(const char * name, ReturnType (JNICALL *func)(JNIEnv *, T, ArgType...)) noexcept
+        {
+            using name_type = decltype(JNINativeMethod::name);
+            using signature_type = decltype(JNINativeMethod::signature);
+            using method_type = decltype(JNINativeMethod::fnPtr);
+
+            const char * signature = internal::java_method_signature<ReturnType, ArgType...>();
+            return {name_type(name), signature_type(signature), (method_type)func};
+        }
+
+        template<size_t N>
+        void register_natives(JNIEnv * jenv, const JNINativeMethod (&methods)[N]) const
+        {
+            int res = jenv->RegisterNatives(c_ptr(), methods, size_to_java(N));
+            if (res != 0)
+            {
+                java_exception::check(jenv);
+                THROW_JAVA_PROBLEM("unable to register native methods, error %d", res);
+            }
+        }
+        
     private:
         static std::shared_ptr<java_class_holder> init(JNIEnv * jenv, std::function<local_java_ref<jclass> (JNIEnv *)> loader)
         {

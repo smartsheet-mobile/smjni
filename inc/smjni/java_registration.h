@@ -40,7 +40,7 @@ namespace smjni
     };
     
     template<typename T>
-    class java_registration : private java_registration_base
+    class [[deprecated("Please use registration facilities from java_class")]] java_registration : private java_registration_base
     {
     public:
         template<typename ReturnType, typename... ArgType>

@@ -262,7 +262,7 @@ internal class Generator {
 
             classHeader.write("inline void ${content.cppClassName}::register_methods(JNIEnv * env) const\n")
             classHeader.write("{\n")
-            classHeader.write("    smjni::java_registration<${content.cppName}> registration;\n\n")
+            classHeader.write("    register_natives(env, {\n")
             for(nativeMethod in content.nativeMethods) {
 
                 val cppName = StringBuilder()
@@ -277,13 +277,13 @@ internal class Generator {
                 cppName.append(nativeMethod.name)
 
                 if (nativeMethod.isStatic) {
-                    classHeader.write("    registration.add_static_method(\"${nativeMethod.name}\", $cppName);\n")
+                    classHeader.write("        bind_native(\"${nativeMethod.name}\", $cppName),\n")
                 }
                 else {
-                    classHeader.write("    registration.add_instance_method(\"${nativeMethod.name}\", $cppName);\n")
+                    classHeader.write("        bind_native(\"${nativeMethod.name}\", $cppName),\n")
                 }
             }
-            classHeader.write("\n    registration.perform(env, *this);\n")
+            classHeader.write("    });\n")
             classHeader.write("}\n\n")
         }
     }
