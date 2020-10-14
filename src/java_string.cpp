@@ -23,24 +23,35 @@
 
 using namespace smjni;
 
+static thread_local std::vector<jchar> g_utf16_buffer;
+static constexpr size_t g_max_buffer_size = 64 * 1024;
+
+static local_java_ref<jstring> java_string_create(JNIEnv * env, const char * str, size_t size)
+{
+    g_utf16_buffer.clear();
+    utf8_to_utf16(str, str + size, std::back_inserter(g_utf16_buffer));
+    
+    jsize length = size_to_java(g_utf16_buffer.size());
+    const jchar * start = length != 0 ? g_utf16_buffer.data() : nullptr;
+    local_java_ref<jstring> ret = java_string_create(env, start, length);
+    
+    if (g_utf16_buffer.size() > g_max_buffer_size)
+    {
+        g_utf16_buffer.resize(g_max_buffer_size);
+        g_utf16_buffer.shrink_to_fit();
+    }
+    
+    return ret;
+}
+
 local_java_ref<jstring> smjni::java_string_create(JNIEnv * env, const char * str)
 {
-    std::vector<jchar> utf16_str;
-    utf8_to_utf16(str, str + (str ? strlen(str) : 0), std::back_inserter(utf16_str));
-    
-    jsize length = size_to_java(utf16_str.size()); 
-    const jchar * start = length != 0 ? &utf16_str[0] : nullptr;
-    return java_string_create(env, start, length);
+    return java_string_create(env, str, (str ? strlen(str) : 0));
 }
 
 local_java_ref<jstring> smjni::java_string_create(JNIEnv * env, const std::string & str)
 {
-    std::vector<jchar> utf16_str;
-    utf8_to_utf16(str.begin(), str.end(), std::back_inserter(utf16_str));
-
-    jsize length = size_to_java(utf16_str.size()); 
-    const jchar * start = length != 0 ? &utf16_str[0] : nullptr;
-    return java_string_create(env, start, length);
+    return java_string_create(env, str.data(), str.size());
 }
 
 std::string smjni::java_string_to_cpp(JNIEnv * env, const auto_java_ref<jstring> & str)
