@@ -33,14 +33,10 @@ namespace smjni
         {
             
         }
-        ~java_exception() noexcept
-        {
-            
-        }
         
         const char * what() const noexcept override;
         
-        jthrowable throwable() const
+        jthrowable throwable() const noexcept
             { return m_throwable.c_ptr(); }
         
         void raise(JNIEnv * jenv) const
