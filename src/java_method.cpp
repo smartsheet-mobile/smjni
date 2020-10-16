@@ -20,7 +20,7 @@
 using namespace smjni;
 
 
-jmethodID java_method_core::get_method_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
+java_method_id_base java_method_id_base::get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
     jmethodID ret = jenv->GetMethodID(clazz, name, signature);
     if (!ret)
@@ -31,7 +31,7 @@ jmethodID java_method_core::get_method_id(JNIEnv * jenv, jclass clazz, const cha
     return ret;
 }
 
-jmethodID java_method_core::get_static_method_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
+java_method_id_base java_method_id_base::get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
     jmethodID ret = jenv->GetStaticMethodID(clazz, name, signature);
     if (!ret)

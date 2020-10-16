@@ -72,10 +72,6 @@ namespace smjni
     template<typename T>
     class java_class 
     { 
-    template<typename ReturnType, typename ThisType, typename... ArgType> friend class java_method;
-    template<typename ReturnType, typename... ArgType> friend class java_static_method;
-    template<typename ReturnType, typename... ArgType> friend class java_constructor;
-    template<typename Type> friend class java_static_field;
     public:
         java_class(const auto_java_ref<jclass> & clazz):
             m_holder(init(clazz))

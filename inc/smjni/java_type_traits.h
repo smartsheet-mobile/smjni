@@ -52,16 +52,26 @@ namespace smjni
         return size_t(size);
     }
 
-    template<typename T> SMJNI_FORCE_INLINE constexpr T argument_to_java(T val) 
+    template<typename T> SMJNI_FORCE_INLINE constexpr T argument_to_java(T val) noexcept
         { return val; }
-    template<typename T> SMJNI_FORCE_INLINE T argument_to_java(const auto_java_ref<T> & val)
+    template<typename T> SMJNI_FORCE_INLINE T argument_to_java(const auto_java_ref<T> & val) noexcept
         { return val.c_ptr(); }
 
-    template<typename T> SMJNI_FORCE_INLINE constexpr T return_value_from_java(JNIEnv *, T val)
+    template<typename T> SMJNI_FORCE_INLINE constexpr T return_value_from_java(JNIEnv *, T val) noexcept
         { return val; }
-    template<typename T> SMJNI_FORCE_INLINE local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val)
+    template<typename T> SMJNI_FORCE_INLINE local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val) noexcept
         { return jattach(env, val); }
 
+    //Allows uniform handling of void return
+    struct VoidResult
+    {
+        //allows uniform handling of if (!ret)
+        operator bool() const noexcept
+        { return false; }
+    };
+
+    SMJNI_FORCE_INLINE void return_value_from_java(JNIEnv * env, VoidResult val) noexcept
+        { }
 
     template<size_t N>
     constexpr inline decltype(auto) object_signature_from_name(const char (&name)[N])
@@ -102,28 +112,31 @@ namespace smjni
             return internal::string_array("V");
         }
 
-        static void call_method(JNIEnv * jenv, jobject object, jmethodID method, ...)
+        static VoidResult call_method(JNIEnv * jenv, jobject object, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallVoidMethodV(object, method, vl);
             va_end(vl);
+            return {};
         }
 
-        static void call_static_method(JNIEnv * jenv, jclass clazz, jmethodID method, ...)
+        static VoidResult call_static_method(JNIEnv * jenv, jclass clazz, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallStaticVoidMethodV(clazz, method, vl);
             va_end(vl);
+            return {};
         }
 
-        static void call_non_virtual_method(JNIEnv * jenv, jobject object, jclass clazz, jmethodID method, ...)
+        static VoidResult call_non_virtual_method(JNIEnv * jenv, jobject object, jclass clazz, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallNonvirtualVoidMethodV(object, clazz, method, vl);
             va_end(vl);
+            return {};
         }
     };
 }

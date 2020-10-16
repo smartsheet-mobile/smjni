@@ -52,20 +52,26 @@ namespace smjni
         public:
             object_class(JNIEnv * env):
                 core_class(env),
-                toString(env, *this, "toString")
-            {}   
-                
-            const java_method<jstring, jobject> toString;
+                m_toString(env, *this, "toString")
+            {}
+            
+            local_java_ref<jstring> toString(JNIEnv * env, const auto_java_ref<jobject> & object) const
+                { return m_toString(env, object); }
+        private:
+            const java_method<jstring, jobject> m_toString;
         };
         class throwable_class final : public core_class<jthrowable>
         {
         public:
             throwable_class(JNIEnv * env):
                 core_class(env),
-                ctor(env, *this) 
-            {}   
-                
-            const smjni::java_constructor<jthrowable, jstring> ctor; 
+                m_ctor(env, *this)
+            {}
+            
+            local_java_ref<jthrowable> ctor(JNIEnv * env, const auto_java_ref<jstring> & message) const
+                { return m_ctor(env, *this, message); }
+        private:
+            const smjni::java_constructor<jthrowable, jstring> m_ctor;
         };
     public:
         static void init(JNIEnv * env);

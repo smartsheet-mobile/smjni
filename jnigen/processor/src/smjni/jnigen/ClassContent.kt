@@ -184,11 +184,11 @@ internal class ClassContent(val classElement: TypeElement,
         val baseReturnType = typeMap.nativeNameOf(methodElement.returnType)
         templateArguments.add(baseReturnType)
         val returnType = typeMap.wrapperNameOf(methodElement.returnType, false)
+        templateArguments.add("$cppName")
         if (!isStatic) {
-            templateArguments.add("$cppName")
             argTypes.add(typeMap.wrapperNameOf(classElement.asType(), true))
             argNames.add("self")
-        }
+        } 
         for (param in methodElement.parameters) {
             val paramType = param.asType()
             templateArguments.add(typeMap.nativeNameOf(paramType))
@@ -214,8 +214,8 @@ internal class ClassContent(val classElement: TypeElement,
         val fieldType = fieldElement.asType()
         templateArguments.add(typeMap.nativeNameOf(fieldType))
         val returnType = typeMap.wrapperNameOf(fieldType, false)
+        templateArguments.add("$cppName")
         if (!isStatic) {
-            templateArguments.add("$cppName")
             argTypes.add(typeMap.wrapperNameOf(classElement.asType(), true))
             argNames.add("self")
         }

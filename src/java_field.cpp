@@ -19,7 +19,7 @@
 
 using namespace smjni;
 
-jfieldID java_field_core::get_field_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
+java_field_id_base java_field_id_base::get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
     jfieldID ret = jenv->GetFieldID(clazz, name, signature);
     if (!ret)
@@ -30,7 +30,7 @@ jfieldID java_field_core::get_field_id(JNIEnv * jenv, jclass clazz, const char *
     return ret;
 }
 
-jfieldID java_field_core::get_static_field_id(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
+java_field_id_base java_field_id_base::get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
     jfieldID ret = jenv->GetStaticFieldID(clazz, name, signature);
     if (!ret)
