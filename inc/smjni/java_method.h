@@ -64,14 +64,14 @@ namespace smjni
         
         template<typename ClassType>
         java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
-                       std::enable_if_t<dependent_value<Kind == static_method, ClassType>> * = nullptr):
+                       std::enable_if_t<dependent_value<Kind == static_method, ClassType>, class nonexistent1> * = nullptr):
             super(java_method_id::get_static(jenv, clazz.c_ptr(), name, internal::java_method_signature<ReturnType, ArgType...>()))
         {
         }
         
         template<typename ClassType>
         java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
-                       std::enable_if_t<dependent_value<Kind == instance_method, ClassType>> * = nullptr):
+                       std::enable_if_t<dependent_value<Kind == instance_method, ClassType>, class nonexistent2> * = nullptr):
             super(java_method_id::get(jenv, clazz.c_ptr(), name, internal::java_method_signature<ReturnType, ArgType...>()))
         {
         }
@@ -79,7 +79,7 @@ namespace smjni
         template<typename ClassType>
         java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz,
                        std::enable_if_t<dependent_value<std::is_same_v<ReturnType, void>, ClassType> &&
-                                              dependent_value<Kind == constructor, ClassType>> * = nullptr):
+                                              dependent_value<Kind == constructor, ClassType>, class nonexistent3> * = nullptr):
             super(java_method_id::get(jenv, clazz.c_ptr(), "<init>", internal::java_method_signature<ReturnType, ArgType...>()))
         {
         }
