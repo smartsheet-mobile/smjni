@@ -53,8 +53,8 @@ jar {
     }
     metaInf { from('META-INF') }
 
-    setArchiveName("jnigen.jar")
-    setDestinationDir(rootProject.buildDir)
+    setArchiveFileName("jnigen.jar")
+    setDestinationDirectory(rootProject.buildDir)
 }
 
 javadoc {

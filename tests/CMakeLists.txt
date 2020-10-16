@@ -23,7 +23,7 @@ add_subdirectory("src/cpp" ${CMAKE_CURRENT_BINARY_DIR}/test)
 
 
 add_custom_target(javabuild  
-    COMMAND ${CMAKE_CURRENT_LIST_DIR}/gradlew -PbuildDir=${CMAKE_CURRENT_BINARY_DIR}/java makeJNIHeaders
+    COMMAND ${CMAKE_CURRENT_LIST_DIR}/gradlew -PbuildDir=${CMAKE_CURRENT_BINARY_DIR}/java --stacktrace --warning-mode all makeJNIHeaders
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
 

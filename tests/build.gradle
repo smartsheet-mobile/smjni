@@ -101,8 +101,8 @@ jar {
                    'Main-Class': 'smjni.tests.TestSmJNI'
     }
     
-    setArchiveName("smjnitests.jar")
-    setDestinationDir(rootProject.buildDir)
+    setArchiveFileName("smjnitests.jar")
+    setDestinationDirectory(rootProject.buildDir)
 
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
