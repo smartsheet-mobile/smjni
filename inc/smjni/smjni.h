@@ -25,7 +25,6 @@
 #include <smjni/java_method.h>
 #include <smjni/java_field.h>
 #include <smjni/java_class.h>
-#include <smjni/java_registration.h>
 #include <smjni/java_exception.h>
 #include <smjni/java_array.h>
 #include <smjni/java_string.h>

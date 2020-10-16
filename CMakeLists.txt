@@ -33,7 +33,6 @@ add_library(smjni STATIC
     src/java_externals.cpp
     src/java_field.cpp
     src/java_method.cpp
-    src/java_registration.cpp
     src/java_runtime.cpp
     src/java_string.cpp
     src/jni_provider.cpp
@@ -50,7 +49,6 @@ add_library(smjni STATIC
     inc/smjni/java_frame.h
     inc/smjni/java_method.h
     inc/smjni/java_ref.h
-    inc/smjni/java_registration.h
     inc/smjni/java_runtime.h
     inc/smjni/java_string.h
     inc/smjni/java_type_traits.h
