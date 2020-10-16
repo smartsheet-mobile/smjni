@@ -20,6 +20,7 @@
 #include <smjni/java_type_traits.h>
 
 #include <iterator>
+#include <cstring>
 
 using namespace smjni;
 

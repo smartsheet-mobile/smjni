@@ -19,6 +19,7 @@ cmake_minimum_required(VERSION 3.5)
 project(smjni)
 
 if (NOT ANDROID)
+    set(JAVA_AWT_INCLUDE_PATH NotNeeded)
     find_package(JNI)
 
     set(JNI_INCLUDE_DIRS ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} CACHE PATH "JNI include dirs")
@@ -62,6 +63,7 @@ set_property(TARGET smjni PROPERTY CXX_STANDARD 17)
 set_property(TARGET smjni PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjni PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjni PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+set_property(TARGET smjni PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(smjni 
     PUBLIC 
@@ -71,6 +73,7 @@ target_compile_options(smjni
     $<$<CXX_COMPILER_ID:MSVC>:/W4;/wd4100;/wd4127>
     $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
     $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-Wno-unused-parameter>
 )
 
 target_include_directories(smjni 

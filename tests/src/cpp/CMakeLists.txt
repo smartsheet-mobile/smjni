@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 
 add_library(smjnitests SHARED EXCLUDE_FROM_ALL)
 
@@ -26,12 +26,14 @@ set_property(TARGET smjnitests PROPERTY CXX_STANDARD 17)
 set_property(TARGET smjnitests PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjnitests PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+set_property(TARGET smjnitests PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(smjnitests 
     PRIVATE 
     $<$<CXX_COMPILER_ID:MSVC>:/W4;/wd4100;/wd4127>
     $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
     $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-Wno-unused-parameter;-Wno-unused-but-set-parameter>
 )
 
 file(GLOB GENERATED_FILES CONFIGURE_DEPENDS generated/*.h)

@@ -47,12 +47,6 @@ namespace smjni
             java_exception::check(env);
         }
         
-        constexpr void swap(java_array_access_base & other) noexcept
-        {
-            std::swap(this->m_env, other.m_env);
-            std::swap(this->m_array, other.m_array);
-            std::swap(this->m_length, other.m_length);
-        }
     protected:
         JNIEnv * const m_env = nullptr;
         const T m_array = nullptr;
@@ -444,14 +438,6 @@ namespace smjni
             return (*this)[this->m_length - 1];
         }
         
-        void swap(java_array_access & other) noexcept
-        {
-            java_array_access_base<T>::swap(other);
-        }
-        friend void swap(java_array_access & lhs, java_array_access & rhs) noexcept
-        {
-            lhs.swap(rhs);
-        }
     
     private:
         element_type get(jsize index) const
@@ -619,15 +605,6 @@ namespace smjni
         element_type * data() noexcept
         {
             return this->m_data;
-        }
-        void swap(java_array_access & other) noexcept
-        {
-            java_array_access_base<T>::swap(other);
-            std::swap(this->m_size, other.m_size);
-        }
-        friend constexpr void swap(java_array_access & lhs, java_array_access & rhs) noexcept
-        {
-            lhs.swap(rhs);
         }
     private:
         element_type * m_data = nullptr;

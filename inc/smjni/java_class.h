@@ -42,7 +42,7 @@ namespace smjni
         const char * java_method_signature()
         {
             using internal::string_array;
-            static constexpr const auto sig = (string_array("(") + ... + java_type_traits<ArgType>::signature()) + string_array(")") + java_type_traits<ReturnType>::signature();
+            static constexpr const auto sig = (make_string_array("(") + ... + java_type_traits<ArgType>::signature()) + make_string_array(")") + java_type_traits<ReturnType>::signature();
             return sig.c_str();
         }
     }

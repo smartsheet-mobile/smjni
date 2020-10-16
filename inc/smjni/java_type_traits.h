@@ -32,7 +32,7 @@ namespace smjni
     {
         if (sizeof(size_t) >= sizeof(jsize))
         {
-            if (size > std::numeric_limits<jsize>::max())
+            if (size > size_t(std::numeric_limits<jsize>::max()))
                 std::terminate();
             
         }
@@ -45,7 +45,7 @@ namespace smjni
             std::terminate();
         if (sizeof(size_t) < sizeof(jsize))
         {
-            if (size > std::numeric_limits<size_t>::max())
+            if (size_t(size) > std::numeric_limits<size_t>::max())
                 std::terminate();
             
         }

@@ -117,6 +117,12 @@ namespace smjni
 
         template<int N>
         string_array(const char (&literal)[N]) -> string_array<N - 1, string_ref_impl>;
+
+        template<int N>
+        constexpr auto make_string_array(const char (&literal)[N]) -> string_array<N - 1, string_ref_impl>
+        {
+            return string_array<N - 1, string_ref_impl>(literal);
+        }
         
         template <int N1, int N2, template<int> class Impl1, template<int> class Impl2>
         constexpr string_array<N1 + N2, string_own_impl> operator+(const string_array<N1, Impl1>& s1, const string_array<N2, Impl2>& s2)
