@@ -32,7 +32,7 @@ namespace smjni
             jni_record();
             ~jni_record();
 
-            JNIEnv * env() const
+            JNIEnv * env() const noexcept
                 { return m_env; }
         private:
             JNIEnv * m_env;

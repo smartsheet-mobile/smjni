@@ -320,14 +320,14 @@ namespace smjni
     using weak_java_ref = java_ref<T, internal::weak_ref_traits>;
     
     template<typename T>
-    inline auto_java_ref<T> jauto(T ptr)
+    inline auto_java_ref<T> jauto(T ptr) noexcept
         { return auto_java_ref<T>(ptr); }
     
     template<typename T>
-    inline local_java_ref<T> jref(JNIEnv * env, T ptr)
+    inline local_java_ref<T> jref(JNIEnv * env, T ptr) noexcept
         { return internal::new_java_ref<internal::local_ref_traits>(env, ptr); }
     template<typename T>
-    inline local_java_ref<T> jattach(JNIEnv * env, T ptr)
+    inline local_java_ref<T> jattach(JNIEnv * env, T ptr) noexcept
         { return internal::attach_java_ref<internal::local_ref_traits>(env, ptr); }
     
     template<typename T>
