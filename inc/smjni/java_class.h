@@ -45,40 +45,48 @@ namespace smjni
             static constexpr const auto sig = (make_string_array("(") + ... + java_type_traits<ArgType>::signature()) + make_string_array(")") + java_type_traits<ReturnType>::signature();
             return sig.c_str();
         }
+    
+        class java_class_holder
+        {
+        public:
+            java_class_holder(global_java_ref<jclass> && clazz):
+                m_class(std::move(clazz))
+            {}
+                
+            jclass c_ptr() const
+            {
+                return m_class.c_ptr();
+            }
+
+            bool is_instance_of(JNIEnv * jenv, const auto_java_ref<jobject> & obj) const
+            {
+                return jenv->IsInstanceOf(obj.c_ptr(), c_ptr());
+            }
+            
+        private:
+            global_java_ref<jclass> m_class;
+        };
     }
 
 
-    class java_class_holder 
-    { 
-    public:
-        java_class_holder(const auto_java_ref<jclass> & clazz):
-            m_class(clazz)
-        {}
-            
-        jclass c_ptr() const 
-        {
-            return m_class.c_ptr();
-        }
-
-        bool is_instance_of(JNIEnv * jenv, const auto_java_ref<jobject> & obj) const
-        {
-            return jenv->IsInstanceOf(obj.c_ptr(), c_ptr());
-        }
-        
-    private:
-        global_java_ref<jclass> m_class;
-    };
+    
     
     template<typename T>
     class java_class 
-    { 
+    {
+    public:
+        template<class Callable>
+        static constexpr bool is_loader = std::is_invocable_r_v<local_java_ref<jclass>, Callable, JNIEnv *> ||
+                                          std::is_invocable_r_v<global_java_ref<jclass>, Callable, JNIEnv *>;
     public:
         java_class(const auto_java_ref<jclass> & clazz):
-            m_holder(init(clazz))
+            m_holder(init([clazz] () { return clazz; }))
         {}
-            
-        java_class(JNIEnv * jenv, std::function<local_java_ref<jclass> (JNIEnv *)> loader):
-            m_holder(init(jenv, loader))
+        
+        template<class Loader>
+        java_class(JNIEnv * jenv, Loader loader,
+                   std::enable_if_t<is_loader<Loader>> * = nullptr):
+            m_holder(init([loader, jenv] () { return loader(jenv); }))
         {}
         
         jclass c_ptr() const
@@ -125,42 +133,30 @@ namespace smjni
         }
         
     private:
-        static std::shared_ptr<java_class_holder> init(JNIEnv * jenv, std::function<local_java_ref<jclass> (JNIEnv *)> loader)
-        {
-            return do_init([loader, jenv] () -> global_java_ref<jclass> { return loader(jenv); });
-        }
-        static std::shared_ptr<java_class_holder> init(const auto_java_ref<jclass> & clazz)
-        {
-            return do_init([clazz] () -> global_java_ref<jclass> { return clazz; });
-        }
-
-        static std::shared_ptr<java_class_holder> do_init(std::function<global_java_ref<jclass> ()> loader)
+        template<class Loader>
+        static
+        std::shared_ptr<internal::java_class_holder> init(Loader loader)
         {
             std::lock_guard<std::mutex> lock(s_holder_mutex);
             auto ret = s_holder.lock();
             if (!ret)
             {
-                auto clazz = loader();
-                ret = std::make_shared<java_class_holder>(clazz);
+                ret = std::make_shared<internal::java_class_holder>(loader());
                 s_holder = ret;
             }
             return ret;
         }
         
-        const std::shared_ptr<java_class_holder> & holder() const
-        {
-            return m_holder;
-        }
     private:
-        const std::shared_ptr<java_class_holder> m_holder;
+        const std::shared_ptr<internal::java_class_holder> m_holder;
         
         static std::mutex s_holder_mutex;
-        static std::weak_ptr<java_class_holder> s_holder;
+        static std::weak_ptr<internal::java_class_holder> s_holder;
     };
     template<typename T>
     std::mutex java_class<T>::s_holder_mutex;
     template<typename T>
-    std::weak_ptr<java_class_holder> java_class<T>::s_holder;
+    std::weak_ptr<internal::java_class_holder> java_class<T>::s_holder;
 }
 
 #endif	//HEADER_JAVA_CLASS_H_INCLUDED
