@@ -45,7 +45,7 @@ classes partially natively or using Java from within C++ application.
 *    Completely hide JNI fundamentals: existence of per thread JNIEnv *, global/local reference semantics etc. from C++ code
 *    Provide C++ wrappers for common Java classes
 *    Provide Java wrappers for common C++ classes
-*    Support old C++ compilers and libraries. This library requires C++14. 
+*    Support old C++ compilers and libraries. This library requires C++17. 
 
 ## Building
 
