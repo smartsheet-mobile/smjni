@@ -30,7 +30,7 @@ set_property(TARGET smjnitests PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(smjnitests 
     PRIVATE 
-    $<$<CXX_COMPILER_ID:MSVC>:/W4;/wd4100;/wd4127>
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8;/W4;/wd4100;/wd4127>
     $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
     $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
     $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-Wno-unused-parameter;-Wno-unused-but-set-parameter>
