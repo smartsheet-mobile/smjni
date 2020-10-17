@@ -28,7 +28,7 @@ namespace smjni
 {
     namespace internal
     {
-        class jni_provider_tls;
+        class jni_record;
     };
 
     class jni_provider
@@ -45,11 +45,13 @@ namespace smjni
         JavaVM * vm() const
             { return m_vm; }
     private:
-        jni_provider(JavaVM * vm);
-        ~jni_provider();
+        jni_provider(JavaVM * vm):
+            m_vm(vm)
+        {}
+        ~jni_provider() = default;
     private:
         JavaVM * m_vm;
-        std::unique_ptr<internal::jni_provider_tls> m_tls;
+        static thread_local std::unique_ptr<internal::jni_record> m_record;
     };
 }
 

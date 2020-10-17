@@ -19,24 +19,24 @@
 
 using namespace smjni;
 
-jfieldID java_field_core::get_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature)
+java_field_id_base java_field_id_base::get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
-    jfieldID ret = jenv->GetFieldID(clazz, name, signature.c_str());
+    jfieldID ret = jenv->GetFieldID(clazz, name, signature);
     if (!ret)
     {
         java_exception::check(jenv);
-        THROW_JAVA_PROBLEM("Unable to get field %s with signature %s", name, signature.c_str());
+        THROW_JAVA_PROBLEM("Unable to get field %s with signature %s", name, signature);
     }
     return ret;
 }
 
-jfieldID java_field_core::get_static_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature)
+java_field_id_base java_field_id_base::get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
-    jfieldID ret = jenv->GetStaticFieldID(clazz, name, signature.c_str());
+    jfieldID ret = jenv->GetStaticFieldID(clazz, name, signature);
     if (!ret)
     {
         java_exception::check(jenv);
-        THROW_JAVA_PROBLEM("Unable to get static field %s with signature %s", name, signature.c_str());
+        THROW_JAVA_PROBLEM("Unable to get static field %s with signature %s", name, signature);
     }
     return ret;
 }

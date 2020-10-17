@@ -147,16 +147,18 @@ internal class Generator {
             when(javaEntity.type) {
                 JavaEntityType.Method, JavaEntityType.StaticMethod, JavaEntityType.Constructor -> {
                     classHeader.write("    ${javaEntity.returnType} ${javaEntity.name}(JNIEnv * env")
-                    for (i in 1 until javaEntity.templateArguments.size) {
-                        classHeader.write(", ${javaEntity.argTypes[i - 1]} ${argNames[i]}")
+                    for (i in 0 until javaEntity.argTypes.size) {
+                        classHeader.write(", ${javaEntity.argTypes[i]} ${argNames[i + 1]}")
                     }
                     val memberName = "m_${javaEntity.name}"
                     classHeader.write(") const\n        { ")
                     if (javaEntity.returnType != "void")
                         classHeader.write("return ")
                     classHeader.write("$memberName(env")
-                    for (i in 1 until javaEntity.templateArguments.size) {
-                        classHeader.write(", ${argNames[i]}")
+                    if (javaEntity.type == JavaEntityType.StaticMethod ||  javaEntity.type == JavaEntityType.Constructor)
+                        classHeader.write(", *this")
+                    for (i in 0 until javaEntity.argTypes.size) {
+                        classHeader.write(", ${argNames[i + 1]}")
                     }
                     classHeader.write("); }\n")
 
@@ -164,16 +166,16 @@ internal class Generator {
                         classHeader.write("    template<typename ClassType> ${javaEntity.returnType} ${javaEntity.name}(JNIEnv * env")
                         classHeader.write(", ${javaEntity.argTypes[0]} ${argNames[1]}")
                         classHeader.write(", const java_class<ClassType> & classForNonVirtualCall")
-                        for (i in 2 until javaEntity.templateArguments.size) {
-                            classHeader.write(", ${javaEntity.argTypes[i - 1]} ${argNames[i]}")
+                        for (i in 1 until javaEntity.argTypes.size) {
+                            classHeader.write(", ${javaEntity.argTypes[i]} ${argNames[i + 1]}")
                         }
                         classHeader.write(") const\n        { ")
                         if (javaEntity.returnType != "void")
                             classHeader.write("return ")
                         classHeader.write("$memberName.call_non_virtual(env")
                         classHeader.write(", ${argNames[1]}, classForNonVirtualCall")
-                        for (i in 2 until javaEntity.templateArguments.size) {
-                            classHeader.write(", ${argNames[i]}")
+                        for (i in 1 until javaEntity.argTypes.size) {
+                            classHeader.write(", ${argNames[i + 1]}")
                         }
                         classHeader.write("); }\n")
                     }
@@ -184,11 +186,13 @@ internal class Generator {
 
                     val getter = "get_${javaEntity.name}"
                     classHeader.write("    ${javaEntity.returnType} $getter(JNIEnv * env")
-                    if (javaEntity.templateArguments.size == 2) {
+                    if (javaEntity.argTypes.size == 2) {
                         classHeader.write(", ${javaEntity.argTypes[0]} ${argNames[1]}")
                     }
                     classHeader.write(") const\n        { return $memberName.get(env")
-                    if (javaEntity.templateArguments.size == 2) {
+                    if (javaEntity.type == JavaEntityType.StaticField)
+                        classHeader.write(", *this")
+                    if (javaEntity.argTypes.size == 2) {
                         classHeader.write(", ${argNames[1]}")
                     }
                     classHeader.write("); }\n")
@@ -196,14 +200,16 @@ internal class Generator {
                     if (!javaEntity.isFinal) {
                         val setter = "set_${javaEntity.name}"
                         classHeader.write("    void $setter(JNIEnv * env")
-                        if (javaEntity.templateArguments.size == 2) {
+                        if (javaEntity.argTypes.size == 2) {
                             classHeader.write(", ${javaEntity.argTypes[0]} ${argNames[1]}")
                             classHeader.write(", ${javaEntity.argTypes[1]} value")
                         } else {
                             classHeader.write(", ${javaEntity.argTypes[0]} value")
                         }
                         classHeader.write(") const\n        { $memberName.set(env")
-                        if (javaEntity.templateArguments.size == 2) {
+                        if (javaEntity.type == JavaEntityType.StaticField)
+                            classHeader.write(", *this")
+                        if (javaEntity.argTypes.size == 2) {
                             classHeader.write(", ${argNames[1]}")
                         }
                         classHeader.write(", value); }\n")
@@ -226,8 +232,8 @@ internal class Generator {
                     JavaEntityType.StaticField -> classHeader.write("    const smjni::java_static_field<")
                     JavaEntityType.Constructor -> classHeader.write("    const smjni::java_constructor<")
                 }
-                val memberName = "m_${javaEntity.name}"
                 classHeader.write(javaEntity.templateArguments.joinToString(separator = ", "))
+                val memberName = "m_${javaEntity.name}"
                 classHeader.write("> $memberName;\n")
             }
             classHeader.write("\n")
@@ -262,7 +268,7 @@ internal class Generator {
 
             classHeader.write("inline void ${content.cppClassName}::register_methods(JNIEnv * env) const\n")
             classHeader.write("{\n")
-            classHeader.write("    smjni::java_registration<${content.cppName}> registration;\n\n")
+            classHeader.write("    register_natives(env, {\n")
             for(nativeMethod in content.nativeMethods) {
 
                 val cppName = StringBuilder()
@@ -277,13 +283,13 @@ internal class Generator {
                 cppName.append(nativeMethod.name)
 
                 if (nativeMethod.isStatic) {
-                    classHeader.write("    registration.add_static_method(\"${nativeMethod.name}\", $cppName);\n")
+                    classHeader.write("        bind_native(\"${nativeMethod.name}\", $cppName),\n")
                 }
                 else {
-                    classHeader.write("    registration.add_instance_method(\"${nativeMethod.name}\", $cppName);\n")
+                    classHeader.write("        bind_native(\"${nativeMethod.name}\", $cppName),\n")
                 }
             }
-            classHeader.write("\n    registration.perform(env, *this);\n")
+            classHeader.write("    });\n")
             classHeader.write("}\n\n")
         }
     }

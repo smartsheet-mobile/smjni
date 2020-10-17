@@ -14,11 +14,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.5)
-
-project(smjnitests)
-
-add_subdirectory("../../.." ${CMAKE_CURRENT_BINARY_DIR}/smjni)
+cmake_minimum_required(VERSION 3.16)
 
 add_library(smjnitests SHARED EXCLUDE_FROM_ALL)
 
@@ -30,9 +26,26 @@ set_property(TARGET smjnitests PROPERTY CXX_STANDARD 17)
 set_property(TARGET smjnitests PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET smjnitests PROPERTY CXX_VISIBILITY_PRESET hidden)
 set_property(TARGET smjnitests PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+set_property(TARGET smjnitests PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_sources(smjnitests PRIVATE
-    smjnitests.cpp
+target_compile_options(smjnitests 
+    PRIVATE 
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8;/W4;/wd4100;/wd4127>
+    $<$<CXX_COMPILER_ID:Clang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:AppleClang>:-Wall;-Wextra;-Wno-unused-parameter>
+    $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-Wno-unused-parameter;-Wno-unused-but-set-parameter>
 )
 
-install(TARGETS smjnitests DESTINATION ${CMAKE_CURRENT_LIST_DIR}/../../build/native)
+file(GLOB GENERATED_FILES CONFIGURE_DEPENDS generated/*.h)
+
+target_sources(smjnitests PRIVATE
+    catch.hpp
+    integration_tests.cpp
+    java_ref_tests.cpp
+    smjnitests.cpp
+    string_tests.cpp
+    test_util.h
+    utf_tests.cpp
+    ${GENERATED_FILES}
+)
+

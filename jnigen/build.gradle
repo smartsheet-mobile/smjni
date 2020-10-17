@@ -59,6 +59,35 @@ allprojects {
     project.group "smjni.jnigen"
 }
 
+task bundleCpp(type: Zip, group: 'publishing') {
+    from('../src') {
+        include '**/*.cpp'
+        include '**/*.h'
+        into 'src'
+    }
+    from('../inc') {
+        include '**/*.h'
+        into 'inc'
+    }
+    from('../CMakeLists.txt',
+         '../COPYRIGHT.txt',
+         '../LICENSE.txt',
+         '../NOTICE.txt',
+         '../README.md')
 
+    setArchiveFileName("smjni-${project.version}-cpp-only.zip")
+    setDestinationDirectory(rootProject.buildDir)
+}
+
+task bundleJava(type: Zip, group: 'publishing',
+                dependsOn: ['annotations:assemble','processor:assemble']) {
+
+    from(new File(rootProject.buildDir, 'jnigen.jar'),
+         new File(rootProject.buildDir, 'jnigen-annotations.jar'))
+
+    includeEmptyDirs true
+    setArchiveFileName("smjni-${project.version}-jnigen.zip")
+    setDestinationDirectory(rootProject.buildDir)
+}
 
 

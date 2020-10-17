@@ -24,69 +24,76 @@
 
 namespace smjni
 {
-    class java_field_core
+    class java_field_id_base
     {
-    protected:
-        java_field_core() noexcept : m_id(0)
-        {
-        }
-        java_field_core(jfieldID id) noexcept: m_id(id)
-        {
-        }
+    public:
+        java_field_id_base() noexcept : m_id(0)
+        {}
+        java_field_id_base(jfieldID id) noexcept: m_id(id)
+        {}
         
-        java_field_core(const java_field_core &) noexcept = default;
-        java_field_core(java_field_core &&) noexcept = default;
-        java_field_core & operator=(const java_field_core &) noexcept = default;
-        java_field_core & operator=(java_field_core &&) noexcept = default;
-    
-        static jfieldID get_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
-        static jfieldID get_static_field_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
+        static java_field_id_base get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
+        static java_field_id_base get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
         
-    protected:
+        
+        jfieldID get() const
+            { return m_id; }
+        
+    private:
         jfieldID m_id;
     };
-    
-    template<typename Type>
-    class java_field_base : public java_field_core
+
+    enum field_kind
     {
+        static_field,
+        instance_field
+    };
+    
+    template<field_kind Kind, typename Type>
+    class java_field_id : public java_field_id_base
+    {
+    private:
+        typedef java_field_id_base super;
+        
+        template <bool Val, typename... Deps>
+        static inline constexpr bool dependent_value = Val;
+        
     public:
-        typedef Type field_type;
-        typedef typename java_type_traits<Type>::return_type return_type;
-    public:
-        static std::string get_signature()
+        java_field_id() noexcept = default;
+        
+        template<typename ClassType>
+        java_field_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
+                        std::enable_if_t<dependent_value<Kind == instance_field, ClassType>> * = nullptr):
+            super(java_field_id::get(jenv, clazz.c_ptr(), name, internal::java_field_signature<Type>()))
         {
-            return java_type_traits<Type>::signature();
         }
         
-    protected:
-        java_field_base(jfieldID id):
-            java_field_core(id)
-        {}
-        java_field_base() noexcept = default;
-        java_field_base(const java_field_base &) noexcept = default;
-        java_field_base(java_field_base &&) noexcept = default;
-        java_field_base & operator=(const java_field_base &) noexcept = default;
-        java_field_base & operator=(java_field_base &&) noexcept = default;
-        
+        template<typename ClassType>
+        java_field_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
+                        std::enable_if_t<dependent_value<Kind == static_field, ClassType>> * = nullptr):
+            super(java_field_id::get_static(jenv, clazz.c_ptr(), name, internal::java_field_signature<Type>()))
+        {
+        }
     };
     
     template<typename Type, typename ThisType>
-    class java_field : public java_field_base<Type>
+    class java_field
     {
     private:
-        typedef java_field_base<Type> super;
+        typedef java_field_id<instance_field, Type> id_type;
         typedef java_type_traits<Type> traits;
-        typedef typename super::return_type return_type;
+    public:
+        typedef typename traits::return_type return_type;
     public:
         java_field() = default;
-        java_field(JNIEnv * jenv, java_class<ThisType> clazz, const char* name):
-            super(super::get_field_id(jenv, clazz.c_ptr(), name, super::get_signature()))
+        java_field(JNIEnv * jenv, const java_class<ThisType> & clazz, const char* name):
+            m_id(jenv, clazz, name)
         {
         }
         
         return_type get(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object) const
         {
-            Type ret = traits::get_field(jenv, argument_to_java(object), this->m_id);
+            Type ret = traits::get_field(jenv, argument_to_java(object), this->m_id.get());
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
@@ -94,44 +101,44 @@ namespace smjni
         
         void set(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, typename java_type_traits<Type>::arg_type val) const
         {
-            traits::set_field(jenv, argument_to_java(object), this->m_id, argument_to_java(val));
+            traits::set_field(jenv, argument_to_java(object), this->m_id.get(), argument_to_java(val));
             java_exception::check(jenv);
         }
+    private:
+        id_type m_id;
     };
     
-    template<typename Type>
-    class java_static_field : public java_field_base<Type>
+    template<typename Type, typename ClassType>
+    class java_static_field
     {
     private:
-        typedef java_field_base<Type> super;
+        typedef java_field_id<static_field, Type> id_type;
         typedef java_type_traits<Type> traits;
-        typedef typename super::return_type return_type;
+    public:
+        typedef typename traits::return_type return_type;
     public:
         java_static_field() = default;
         
-        template<typename ClassType>
         java_static_field(JNIEnv * jenv, const java_class<ClassType> & clazz, const char* name):
-            super(super::get_static_field_id(jenv, clazz.c_ptr(), name, super::get_signature())),
-            m_holder(clazz.holder())
+            m_id(jenv, clazz, name)
         {
         }
         
-        
-        return_type get(JNIEnv * jenv) const
+        return_type get(JNIEnv * jenv, const java_class<ClassType> & clazz) const
         {
-            Type ret = traits::get_static_field(jenv, this->m_holder->c_ptr(), this->m_id);
+            Type ret = traits::get_static_field(jenv, clazz.c_ptr(), this->m_id.get());
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
         }
         
-        void set(JNIEnv * jenv, typename java_type_traits<Type>::arg_type val) const
+        void set(JNIEnv * jenv, const java_class<ClassType> & clazz, typename java_type_traits<Type>::arg_type val) const
         {
-            java_type_traits<Type>::set_static_field(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(val));
+            traits::set_static_field(jenv, clazz.c_ptr(), this->m_id.get(), argument_to_java(val));
             java_exception::check(jenv);
         }
     private:
-        std::shared_ptr<java_class_holder> m_holder;
+        id_type m_id;
     };
 }
 

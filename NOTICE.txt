@@ -11,3 +11,8 @@ Copyright 2019 SmJNI Contributors
 This product includes software developed at
 Smartsheet.com, Inc. (http://www.smartsheet.com).
 
+UTF-8 decoding algorithm incorporates code by Bjoern Hoehrmann
+Copyright (c) 2008-2010 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
+
+

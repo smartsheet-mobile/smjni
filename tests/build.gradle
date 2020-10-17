@@ -14,6 +14,8 @@
  limitations under the License.
 */
 
+import java.util.regex.Pattern
+
 buildscript {
     repositories {
         mavenCentral()
@@ -31,15 +33,24 @@ apply plugin: 'java'
 String JNIGEN_GENERATED_PATH = "src/cpp/generated"
 String JNIGEN_OUTPUT_LIST_NAME = "outputs.txt"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+configurations {
+    // configuration that holds jars to include in the jar
+    extraLibs
+}
 
 dependencies {
-    testCompileOnly 'smjni.jnigen:annotations'
-    testAnnotationProcessor("smjni.jnigen:processor@jar") {
+    implementation 'smjni.jnigen:annotations'
+    extraLibs 'org.junit.jupiter:junit-jupiter-api:5.3.0'
+    annotationProcessor("smjni.jnigen:processor@jar") {
         transitive true
     }
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.0'
+    configurations.implementation.extendsFrom(configurations.extraLibs)
 }
 
 tasks.withType(JavaCompile) {
@@ -52,18 +63,13 @@ tasks.withType(JavaCompile) {
     outputs.file("$JNIGEN_GENERATED_PATH/$JNIGEN_OUTPUT_LIST_NAME")
 }
 
-test {
-    useJUnitPlatform()
-
-    systemProperty("java.library.path",
-            System.getProperty("java.library.path") + File.pathSeparator + file("build/native"))
-}
-
 sourceSets {
-    test.java.srcDirs = ['src/java']
+    main.java.srcDirs = ['src/java']
 }
 
 task cleanStaleJNIHeaders(dependsOn: compileTestJava) {
+
+    inputs.files file("$JNIGEN_GENERATED_PATH/$JNIGEN_OUTPUT_LIST_NAME")
 
     doLast {
         def generated = new HashSet<String>()
@@ -84,28 +90,21 @@ task cleanStaleJNIHeaders(dependsOn: compileTestJava) {
     }
 }
 
-task buildNative(dependsOn: cleanStaleJNIHeaders) {
+task makeJNIHeaders(dependsOn: cleanStaleJNIHeaders) {
 
-    doLast {
-        project.exec {
-            commandLine = [
-                    "cmake",
-                    "-DSMJNI_INCLUDE_TESTS=true",
-                    "-S", file("src/cpp").toString(),
-                    "-B", file("build/native").toString()
-            ]
-        }
-        project.exec {
-            commandLine = [
-                    "cmake",
-                    "--build", file("build/native").toString(),
-                    "--config", "Debug",
-                    "--target", "smjnitests",
-                    "--target", "install"
-            ]
-        }
-    }
 }
 
-project.tasks.test.dependsOn(buildNative)
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'SmJNI Tests',
+                   'Implementation-Version': project.version,
+                   'Main-Class': 'smjni.tests.TestSmJNI'
+    }
+    
+    setArchiveFileName("smjnitests.jar")
+    setDestinationDirectory(rootProject.buildDir)
 
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

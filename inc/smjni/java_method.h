@@ -24,197 +24,172 @@
 
 namespace smjni
 {
-    class java_method_core
+    class java_method_id_base
     {
     public:
-        static std::string get_signature(size_t count, const std::string * sigs);
-    protected:
-        java_method_core() noexcept : m_id(0)
-        {
-        }
-        java_method_core(jmethodID id) noexcept: m_id(id)
-        {
-        }
-        ~java_method_core() noexcept = default;
-        java_method_core(const java_method_core &) noexcept = default;
-        java_method_core(java_method_core &&) noexcept = default;
-        java_method_core & operator=(const java_method_core &) noexcept = default;
-        java_method_core & operator=(java_method_core &&) noexcept = default;
+        java_method_id_base() noexcept : m_id(0)
+        {}
+        java_method_id_base(jmethodID id) noexcept: m_id(id)
+        {}
         
-        static jmethodID get_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
-        static jmethodID get_static_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature);
         
-    protected:
+        static java_method_id_base get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
+        static java_method_id_base get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature);
+        
+        jmethodID get() const noexcept
+            { return m_id; }
+        
+    private:
         jmethodID m_id;
     };
-    
-    template<typename ReturnType, typename... ArgType>
-    class java_method_base : public java_method_core
+
+    enum method_kind
     {
-    protected:
-        java_method_base(jmethodID id):
-            java_method_core(id)
-        {}
-        ~java_method_base() noexcept = default;
-        java_method_base() noexcept = default;
-        java_method_base(const java_method_base &) noexcept = default;
-        java_method_base(java_method_base &&) noexcept = default;
-        java_method_base & operator=(const java_method_base &) noexcept = default;
-        java_method_base & operator=(java_method_base &&) noexcept = default;    
+        static_method,
+        instance_method,
+        constructor
+    };
+    
+    template<method_kind Kind, typename ReturnType, typename... ArgType>
+    class java_method_id : public java_method_id_base
+    {
+    private:
+        typedef java_method_id_base super;
         
-        static std::string get_signature()
+        template <bool Val, typename... Deps>
+        static inline constexpr bool dependent_value = Val;
+    
+    public:
+        java_method_id() noexcept = default;
+        
+        template<typename ClassType>
+        java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
+                       std::enable_if_t<dependent_value<Kind == static_method, ClassType>, class nonexistent1> * = nullptr):
+            super(java_method_id::get_static(jenv, clazz.c_ptr(), name, internal::java_method_signature<ReturnType, ArgType...>()))
         {
-            std::string sigs[sizeof...(ArgType) + 1] = 
-                { java_type_traits<ReturnType>::signature(), java_type_traits<ArgType>::signature()... };
-            return java_method_core::get_signature(sizeof...(ArgType) + 1, sigs);
+        }
+        
+        template<typename ClassType>
+        java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz, const char * name,
+                       std::enable_if_t<dependent_value<Kind == instance_method, ClassType>, class nonexistent2> * = nullptr):
+            super(java_method_id::get(jenv, clazz.c_ptr(), name, internal::java_method_signature<ReturnType, ArgType...>()))
+        {
+        }
+        
+        template<typename ClassType>
+        java_method_id(JNIEnv * jenv, const java_class<ClassType> & clazz,
+                       std::enable_if_t<dependent_value<std::is_same_v<ReturnType, void>, ClassType> &&
+                                              dependent_value<Kind == constructor, ClassType>, class nonexistent3> * = nullptr):
+            super(java_method_id::get(jenv, clazz.c_ptr(), "<init>", internal::java_method_signature<ReturnType, ArgType...>()))
+        {
         }
     };
     
     template<typename ReturnType, typename ThisType, typename... ArgType>
-    class java_method : public java_method_base<ReturnType, ArgType...>
+    class java_method
     {
     private:
-        typedef java_method_base<ReturnType, ArgType...> super;
+        typedef java_method_id<instance_method, ReturnType, ArgType...> id_type;
         typedef java_type_traits<ReturnType> traits;
+    public:
         typedef typename traits::return_type return_type;
     public:
         java_method() = default;
+        
         java_method(JNIEnv * jenv, const java_class<ThisType> & clazz, const char* name):
-            super(super::get_method_id(jenv, clazz.c_ptr(), name, super::get_signature()))
+            m_id(jenv, clazz, name)
         {
         }
         
         return_type operator()(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, 
                                typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_method(jenv, argument_to_java(object), this->m_id, argument_to_java(params)...);
+            auto ret = traits::call_method(jenv,
+                                           object.c_ptr(),
+                                           this->m_id.get(),
+                                           argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
         }
         
         template<typename ClassType>
-        return_type call_non_virtual(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, const java_class<ClassType> & clazz, 
+        return_type call_non_virtual(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object,
+                                     const java_class<ClassType> & clazz, 
                                      typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_non_virtual_method(jenv, argument_to_java(object), 
-                                                             clazz.c_ptr(), this->m_id,  
-                                                             argument_to_java(params)...);
+            auto ret = traits::call_non_virtual_method(jenv,
+                                                       argument_to_java(object),
+                                                       clazz.c_ptr(),
+                                                       this->m_id.get(),
+                                                       argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
         }
+        
+    private:
+        id_type m_id;
     };
     
-    template<typename ThisType, typename... ArgType>
-    class java_method<void, ThisType, ArgType...> : public java_method_base<void, ArgType...>
+    template<typename ReturnType, typename ClassType, typename... ArgType>
+    class java_static_method
     {
     private:
-        typedef java_method_base<void, ArgType...> super;
-        typedef java_type_traits<void> traits;
-        typedef typename traits::return_type return_type;
-    public:
-        java_method() = default;
-        java_method(JNIEnv * jenv, const java_class<ThisType> & clazz, const char* name):
-            super(super::get_method_id(jenv, clazz.c_ptr(), name, super::get_signature()))
-        {
-        }
-        
-        void operator()(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, 
-                        typename java_type_traits<ArgType>::arg_type... params) const
-        {
-            traits::call_method(jenv, argument_to_java(object), this->m_id, argument_to_java(params)...);
-            java_exception::check(jenv);
-        }
-        
-        template<typename ClassType>
-        void call_non_virtual(JNIEnv * jenv, typename java_type_traits<ThisType>::arg_type object, const java_class<ClassType> & clazz, 
-                              typename java_type_traits<ArgType>::arg_type... params) const
-        {
-            traits::call_non_virtual_method(jenv, argument_to_java(object), clazz.c_ptr(), this->m_id, argument_to_java(params)...);
-            java_exception::check(jenv);
-        }
-    };
-    
-    template<typename ReturnType, typename... ArgType>
-    class java_static_method : public java_method_base<ReturnType, ArgType...>
-    {
-    private:
-        typedef java_method_base<ReturnType, ArgType...> super;
+        typedef java_method_id<static_method, ReturnType, ArgType...> id_type;
         typedef java_type_traits<ReturnType> traits;
+    public:
         typedef typename traits::return_type return_type;
     public:
         java_static_method() = default;
-        template<typename ClassType>
+        
         java_static_method(JNIEnv * jenv, const java_class<ClassType> & clazz, const char* name):
-            super(super::get_static_method_id(jenv, clazz.c_ptr(), name, super::get_signature())),
-            m_holder(clazz.holder())
+            m_id(jenv, clazz, name)
         {
         }
         
-        return_type operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
+        return_type operator()(JNIEnv * jenv, const java_class<ClassType> & clazz, typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
+            auto ret = traits::call_static_method(jenv,
+                                                  clazz.c_ptr(),
+                                                  this->m_id.get(),
+                                                  argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
         }
     private:
-        std::shared_ptr<java_class_holder> m_holder;
-    };
-    
-    template<typename... ArgType>
-    class java_static_method<void, ArgType...> : public java_method_base<void, ArgType...>
-    {
-    private:
-        typedef java_method_base<void, ArgType...> super;
-        typedef java_type_traits<void> traits;
-        typedef typename traits::return_type return_type;
-    public:
-        java_static_method() = default;
-        template<typename ClassType>
-        java_static_method(JNIEnv * jenv, const java_class<ClassType> & clazz, const char* name):
-            super(super::get_static_method_id(jenv, clazz.c_ptr(), name, super::get_signature())),
-            m_holder(clazz.holder())
-        {
-        }
-        
-        void operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
-        {
-            traits::call_static_method(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
-            java_exception::check(jenv);
-        }
-    private:
-        std::shared_ptr<java_class_holder> m_holder;
+        id_type m_id;
     };
     
     template<typename ReturnType, typename... ArgType>
-    class java_constructor : public java_method_base<void, ArgType...>
+    class java_constructor
     {
     private:
-        typedef java_method_base<void, ArgType...> super;
+        typedef java_method_id<constructor, void, ArgType...> id_type;
         typedef java_type_traits<ReturnType> traits;
+    public:
         typedef typename traits::return_type return_type;
     public:
         java_constructor() = default;
         java_constructor(JNIEnv * jenv, const java_class<ReturnType> & clazz):
-            super(super::get_method_id(jenv, clazz.c_ptr(), "<init>", super::get_signature())),
-            m_holder(clazz.holder())
+            m_id(jenv, clazz)
         {
         }
         
-        return_type operator()(JNIEnv * jenv, typename java_type_traits<ArgType>::arg_type... params) const
+        return_type operator()(JNIEnv * jenv, const java_class<ReturnType> & clazz, typename java_type_traits<ArgType>::arg_type... params) const
         {
-            ReturnType ret = traits::new_object(jenv, this->m_holder->c_ptr(), this->m_id, argument_to_java(params)...);
+            auto ret = traits::new_object(jenv,
+                                          clazz.c_ptr(),
+                                          this->m_id.get(),
+                                          argument_to_java(params)...);
             if (!ret)
                 java_exception::check(jenv);
             return return_value_from_java(jenv, ret);
         }
     private:
-        std::shared_ptr<java_class_holder> m_holder;
+        id_type m_id;
     };
-    
-    
 }
 
 #endif	//HEADER_JAVA_METHOD_H_INCLUDED

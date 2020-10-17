@@ -19,36 +19,25 @@
 
 using namespace smjni;
 
-std::string java_method_core::get_signature(size_t count, const std::string * sigs)
-{
-    std::string ret = "(";
-    for(size_t i = 1; i < count; ++i)
-    {
-        ret += sigs[i];
-    }
-    ret += ")";
-    ret += sigs[0];
-    return ret;
-}
 
-jmethodID java_method_core::get_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature)
+java_method_id_base java_method_id_base::get(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
-    jmethodID ret = jenv->GetMethodID(clazz, name, signature.c_str());
+    jmethodID ret = jenv->GetMethodID(clazz, name, signature);
     if (!ret)
     {
         java_exception::check(jenv);
-        THROW_JAVA_PROBLEM("Unable to get method %s with signature %s", name, signature.c_str());
+        THROW_JAVA_PROBLEM("Unable to get method %s with signature %s", name, signature);
     }
     return ret;
 }
 
-jmethodID java_method_core::get_static_method_id(JNIEnv * jenv, jclass clazz, const char * name, const std::string & signature)
+java_method_id_base java_method_id_base::get_static(JNIEnv * jenv, jclass clazz, const char * name, const char * signature)
 {
-    jmethodID ret = jenv->GetStaticMethodID(clazz, name, signature.c_str());
+    jmethodID ret = jenv->GetStaticMethodID(clazz, name, signature);
     if (!ret)
     {
         java_exception::check(jenv);
-        THROW_JAVA_PROBLEM("Unable to get static method %s with signature %s", name, signature.c_str());
+        THROW_JAVA_PROBLEM("Unable to get static method %s with signature %s", name, signature);
     }
     return ret;
 }

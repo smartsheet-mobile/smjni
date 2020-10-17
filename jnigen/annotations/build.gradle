@@ -33,8 +33,8 @@ jar {
                    'Implementation-Version': project.version
     }
 
-    setArchiveName("jnigen-annotations.jar")
-    setDestinationDir(rootProject.buildDir)
+    setArchiveFileName("jnigen-annotations.jar")
+    setDestinationDirectory(rootProject.buildDir)
 }
 
 javadoc {

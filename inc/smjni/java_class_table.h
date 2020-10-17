@@ -53,23 +53,18 @@ namespace smjni
             template<typename X>
             void operator()(const X & cls) const
             {
-                do_register(m_env, cls, decltype(can_register<X>(nullptr))());
+                if constexpr (can_register<X>)
+                {
+                    cls.register_methods(m_env);
+                }
             }
 
         private:
-            template <typename T> static std::true_type can_register( decltype(&T::register_methods) );
-            template <typename T> static std::false_type can_register(...);
-
-            template<typename X>
-            void do_register(JNIEnv * env, const X & cls, std::true_type) const
-            {
-                cls.register_methods(env);
-            }
-
-            template<typename X>
-            void do_register(JNIEnv * env, const X & cls, std::false_type) const
-            {
-            }
+            template <typename T> static std::true_type can_register_helper( decltype(&T::register_methods) );
+            template <typename T> static std::false_type can_register_helper(...);
+            
+            template<typename T>
+            static constexpr bool can_register = decltype(can_register_helper<T>(nullptr))::value;
 
             JNIEnv * const m_env;
         };

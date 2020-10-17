@@ -22,6 +22,7 @@
 #include <smjni/java_method.h>
 #include <smjni/java_field.h>
 #include <smjni/java_exception.h>
+#include <smjni/ct_string.h>
 
 namespace smjni
 {
@@ -51,20 +52,26 @@ namespace smjni
         public:
             object_class(JNIEnv * env):
                 core_class(env),
-                toString(env, *this, "toString")
-            {}   
-                
-            const java_method<jstring, jobject> toString;
+                m_toString(env, *this, "toString")
+            {}
+            
+            local_java_ref<jstring> toString(JNIEnv * env, const auto_java_ref<jobject> & object) const
+                { return m_toString(env, object); }
+        private:
+            const java_method<jstring, jobject> m_toString;
         };
         class throwable_class final : public core_class<jthrowable>
         {
         public:
             throwable_class(JNIEnv * env):
                 core_class(env),
-                ctor(env, *this) 
-            {}   
-                
-            const smjni::java_constructor<jthrowable, jstring> ctor; 
+                m_ctor(env, *this)
+            {}
+            
+            local_java_ref<jthrowable> ctor(JNIEnv * env, const auto_java_ref<jstring> & message) const
+                { return m_ctor(env, *this, message); }
+        private:
+            const smjni::java_constructor<jthrowable, jstring> m_ctor;
         };
     public:
         static void init(JNIEnv * env);
@@ -119,9 +126,9 @@ namespace smjni
         template<typename T> 
         static local_java_ref<jclass> do_find(JNIEnv * jenv)
         {
-            std::string name = java_type_traits<T>::class_name();
-            for(char & c: name) 
-                if (c == '.') c ='/';
+            using internal::string_array, internal::transform;
+            static const auto name = transform(string_array(java_type_traits<T>::class_name()),
+                                               [](char c) {return (c != '.' ? c : '/');});
             return jattach(jenv, jenv->FindClass(name.c_str()));
         }
     private:

@@ -18,10 +18,12 @@
 #ifndef HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 #define HEADER_JAVA_TYPE_TRAITS_H_INCLUDED
 
-#include <string>
 
 #include <smjni/java_ref.h>
 #include <smjni/java_types.h>
+#include <smjni/java_cast.h>
+#include <smjni/java_cast.h>
+#include <smjni/ct_string.h>
 
 namespace smjni
 {
@@ -30,8 +32,8 @@ namespace smjni
     {
         if (sizeof(size_t) >= sizeof(jsize))
         {
-            if (size > std::numeric_limits<jsize>::max())
-                abort();
+            if (size > size_t(std::numeric_limits<jsize>::max()))
+                std::terminate();
             
         }
         return jsize(size);
@@ -40,43 +42,49 @@ namespace smjni
     SMJNI_FORCE_INLINE size_t java_size_to_cpp(jsize size)
     {
         if (size < 0)
-            abort();
+            std::terminate();
         if (sizeof(size_t) < sizeof(jsize))
         {
-            if (size > std::numeric_limits<size_t>::max())
-                abort();
+            if (size_t(size) > std::numeric_limits<size_t>::max())
+                std::terminate();
             
         }
         return size_t(size);
     }
 
-    template<typename T> SMJNI_FORCE_INLINE constexpr T argument_to_java(T val) 
+    template<typename T> SMJNI_FORCE_INLINE constexpr T argument_to_java(T val) noexcept
         { return val; }
-    template<typename T> SMJNI_FORCE_INLINE T argument_to_java(const auto_java_ref<T> & val)
+    template<typename T> SMJNI_FORCE_INLINE T argument_to_java(const auto_java_ref<T> & val) noexcept
         { return val.c_ptr(); }
 
-    template<typename T> SMJNI_FORCE_INLINE constexpr T return_value_from_java(JNIEnv *, T val)
+    template<typename T> SMJNI_FORCE_INLINE constexpr T return_value_from_java(JNIEnv *, T val) noexcept
         { return val; }
-    template<typename T> SMJNI_FORCE_INLINE local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val)
+    template<typename T> SMJNI_FORCE_INLINE local_java_ref<T *> return_value_from_java(JNIEnv * env, T * val) noexcept
         { return jattach(env, val); }
 
-
-    inline std::string object_signature_from_name(const char * name)
+    //Allows uniform handling of void return
+    struct VoidResult
     {
-        std::string ret = "L";
-        for(const char * p = name; *p; ++p) 
-            ret += (*p != '.' ? *p : '/'); 
-        ret += ';';
-        return ret;
+        //allows uniform handling of if (!ret)
+        operator bool() const noexcept
+        { return false; }
+    };
+
+    SMJNI_FORCE_INLINE void return_value_from_java(JNIEnv * env, VoidResult val) noexcept
+        { }
+
+    template<size_t N>
+    constexpr inline decltype(auto) object_signature_from_name(const char (&name)[N])
+    {
+        using internal::string_array;
+        return string_array("L") + transform(string_array(name), [](char c) {return (c != '.' ? c : '/');}) + string_array(";");
     }
 
-    inline std::string array_signature_from_name(const char * name)
+    template<size_t N>
+    constexpr inline decltype(auto) array_signature_from_name(const char (&name)[N])
     {
-        std::string ret = "[L";
-        for(const char * p = name; *p; ++p) 
-            ret += (*p != '.' ? *p : '/'); 
-        ret += ';';
-        return ret;
+        using internal::string_array;
+        return string_array("[") + object_signature_from_name(name);
     }
     
 
@@ -99,33 +107,36 @@ namespace smjni
         java_type_traits(const java_type_traits &) = delete;
         java_type_traits & operator=(const java_type_traits &) = delete;
 
-        static std::string signature()
+        static constexpr decltype(auto) signature()
         {
-            return "V";
+            return internal::string_array("V");
         }
 
-        static void call_method(JNIEnv * jenv, jobject object, jmethodID method, ...)
+        static VoidResult call_method(JNIEnv * jenv, jobject object, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallVoidMethodV(object, method, vl);
             va_end(vl);
+            return {};
         }
 
-        static void call_static_method(JNIEnv * jenv, jclass clazz, jmethodID method, ...)
+        static VoidResult call_static_method(JNIEnv * jenv, jclass clazz, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallStaticVoidMethodV(clazz, method, vl);
             va_end(vl);
+            return {};
         }
 
-        static void call_non_virtual_method(JNIEnv * jenv, jobject object, jclass clazz, jmethodID method, ...)
+        static VoidResult call_non_virtual_method(JNIEnv * jenv, jobject object, jclass clazz, jmethodID method, ...)
         {
             va_list vl;
             va_start(vl, method);
             jenv->CallNonvirtualVoidMethodV(object, clazz, method, vl);
             va_end(vl);
+            return {};
         }
     };
 }
@@ -144,9 +155,9 @@ namespace smjni
             java_type_traits(const java_type_traits &) = delete; \
             java_type_traits & operator=(const java_type_traits &) = delete; \
             \
-            static std::string signature() \
+            static constexpr decltype(auto) signature() \
             { \
-                return sig; \
+                return internal::string_array(sig); \
             } \
             \
             static jtype call_method(JNIEnv * jenv, jobject object, jmethodID method, ...) \
@@ -299,13 +310,12 @@ namespace smjni
         class java_type_traits<jtype> : public java_object_type_base<jtype> \
         {\
         public:\
-            static const std::string & signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                static const auto the_signature = object_signature_from_name(name);\
-                return the_signature;\
+                return object_signature_from_name(name); \
             }\
             \
-            static const char * class_name() \
+            static constexpr decltype(auto) class_name() \
             {\
                 return name;\
             }\
@@ -326,9 +336,9 @@ HANDLE_OBJECT_JAVA_TYPE(jclass,      "java.lang.Class");
         public:\
             typedef jtype element_type;\
             \
-            static std::string signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                return sig;\
+                return internal::string_array(sig); \
             }\
             static void release_array_elements(JNIEnv * env, jtype##Array ar, jtype * data, jint flags)\
             {\
@@ -366,10 +376,9 @@ HANDLE_PRIMITIVE_ARRAY_JAVA_TYPE(jdouble,     Double,     "[D");
         public:\
             typedef jtype element_type;\
             \
-            static const std::string & signature()\
+            static constexpr decltype(auto) signature() \
             {\
-                static const auto the_signature = array_signature_from_name(java_type_traits<jtype>::class_name());\
-                return the_signature;\
+                return array_signature_from_name(java_type_traits<jtype>::class_name()); \
             }\
         };\
         template<>\
@@ -392,63 +401,6 @@ HANDLE_OBJECT_ARRAY_JAVA_TYPE(jobject);
         typedef _##type##Array * type##Array;\
         HANDLE_OBJECT_ARRAY_JAVA_TYPE(type)
 
-namespace smjni
-{
-    template<typename Dest, typename Source>
-    struct java_cast
-    {
-        Dest operator()(Source src)
-        {
-            static_assert(std::is_convertible<typename std::remove_pointer<Source>::type, 
-                                              typename std::remove_pointer<jobject>::type>::value, 
-                          "Not a Java type");
-            static_assert(std::is_convertible<typename std::remove_pointer<Source>::type, 
-                                              typename std::remove_pointer<Dest>::type>::value, 
-                          "Java types are not compatible");
-            return src;
-        }
 
-    };
-
-    template<typename Dest>
-    struct java_cast<Dest, jobject>
-    {
-        Dest operator()(jobject src)
-        {
-            static_assert(std::is_convertible<typename std::remove_pointer<Dest>::type, 
-                                              typename std::remove_pointer<jobject>::type>::value, 
-                          "Not a Java type");
-            return static_cast<Dest>(src);
-        }
-    };
-
-    template<typename Dest, typename Source>
-    inline
-    Dest jstatic_cast(Source src)
-    {
-        return java_cast<Dest, Source>()(src);
-    }
-}
-
-#define DEFINE_JAVA_CONVERSION(T1, T2) \
-    namespace smjni\
-    {\
-        template<> \
-        struct java_cast<T1, T2> \
-        {\
-            T1 operator()(T2 src)\
-            {\
-                return static_cast<T1>(static_cast<jobject>(src));\
-            }\
-        };\
-        template<> \
-        struct java_cast<T2, T1> \
-        {\
-            T2 operator()(T1 src)\
-            {\
-                return static_cast<T2>(static_cast<jobject>(src));\
-            }\
-        };\
-    }
 
 #endif //HEADER_JAVA_TYPE_TRAITS_H_INCLUDED

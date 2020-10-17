@@ -21,6 +21,8 @@
 #include <smjni/java_ref.h>
 #include <smjni/java_exception.h>
 
+#include <stdexcept>
+
 DEFINE_JAVA_TYPE(jByteBuffer, "java.nio.ByteBuffer")
 
 namespace smjni
@@ -31,10 +33,20 @@ namespace smjni
     public:
         typedef T * iterator;
         typedef const T * const_iterator;
+        typedef std::reverse_iterator<iterator> reverse_iterator;
+        typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+        
         typedef jlong size_type;
+        typedef std::make_signed_t<jlong> difference_type;
+        
         typedef T value_type;
+        typedef T & reference;
+        typedef T & const_reference;
+        typedef T * pointer;
+        typedef const T * const_pointer;
+        
     public:
-        java_direct_buffer(T * ptr, jlong size):
+        constexpr java_direct_buffer(T * ptr, jlong size):
             m_ptr(ptr),
             m_size(size)  
         {
@@ -42,8 +54,8 @@ namespace smjni
             
         java_direct_buffer(JNIEnv * env, const auto_java_ref<jByteBuffer> & obj)
         {
-            m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj.c_ptr()));
-            if (!m_ptr)
+            this->m_ptr = static_cast<T *>(env->GetDirectBufferAddress(obj.c_ptr()));
+            if (!this->m_ptr)
             {
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
@@ -54,12 +66,12 @@ namespace smjni
                 java_exception::check(env); 
                 THROW_JAVA_PROBLEM("invalid buffer");
             }
-            m_size = byte_size / jlong(sizeof(T));
+            this->m_size = byte_size / jlong(sizeof(T));
         }
         
         local_java_ref<jByteBuffer> to_java(JNIEnv * env)
         {
-            jobject ret = env->NewDirectByteBuffer(m_ptr, m_size * sizeof(T));
+            jobject ret = env->NewDirectByteBuffer(this->m_ptr, this->m_size * sizeof(T));
             if (!ret)
             {
                 java_exception::check(env);
@@ -68,33 +80,114 @@ namespace smjni
             return jattach(env, ret);
         } 
         
-        const value_type * begin() const
+        constexpr const value_type * begin() const noexcept
         {
-            return m_ptr;
+            return this->m_ptr;
         }
-        value_type * begin()
+        constexpr value_type * begin() noexcept
         {
-            return m_ptr;
+            return this->m_ptr;
         }
-        const value_type * end() const
+        constexpr const value_type * cbegin() const noexcept
         {
-            return m_ptr + m_size;
+            return this->m_ptr;
         }
-        value_type * end()
+        constexpr const value_type * end() const noexcept
         {
-            return m_ptr + m_size;
+            return this->m_ptr + this->m_size;
         }
-        jlong size() const
+        constexpr value_type * end() noexcept
         {
-            return m_size;
+            return this->m_ptr + this->m_size;
         }
-        const value_type & operator[](jsize idx) const
+        constexpr const value_type * cend() const noexcept
         {
-            return m_ptr[idx];
+            return this->m_ptr + this->m_size;
         }
-        value_type & operator[](jsize idx) 
+        constexpr const_reverse_iterator rbegin() const noexcept
         {
-            return m_ptr[idx];
+            return this->m_ptr + this->m_size;
+        }
+        constexpr reverse_iterator rbegin() noexcept
+        {
+            return this->m_ptr + this->m_size;
+        }
+        constexpr const_reverse_iterator crbegin() const noexcept
+        {
+            return this->m_ptr + this->m_size;
+        }
+        constexpr const_reverse_iterator rend() const noexcept
+        {
+            return this->m_ptr;
+        }
+        constexpr reverse_iterator rend() noexcept
+        {
+            return this->m_ptr;
+        }
+        constexpr const_reverse_iterator crend() const noexcept
+        {
+            return this->m_ptr;
+        }
+        constexpr jlong size() const noexcept
+        {
+            return this->m_size;
+        }
+        constexpr bool empty() const noexcept
+        {
+            return this->m_size == 0;
+        }
+        constexpr const value_type & operator[](jsize idx) const noexcept
+        {
+            return this->m_ptr[idx];
+        }
+        constexpr value_type & operator[](jsize idx) noexcept
+        {
+            return this->m_ptr[idx];
+        }
+        constexpr const value_type & at(jsize idx) const noexcept
+        {
+            if (idx < 0 || idx >= this->m_size)
+                throw std::out_of_range("index out of range");
+            return this->m_ptr[idx];
+        }
+        constexpr value_type & at(jsize idx) noexcept
+        {
+            if (idx < 0 || idx >= this->m_size)
+                throw std::out_of_range("index out of range");
+            return this->m_ptr[idx];
+        }
+        constexpr const value_type & front() const noexcept
+        {
+            return this->m_ptr[0];
+        }
+        constexpr value_type & front() noexcept
+        {
+            return this->m_ptr[0];
+        }
+        constexpr const value_type & back() const noexcept
+        {
+            return this->m_ptr[this->m_size - 1];
+        }
+        constexpr value_type & back() noexcept
+        {
+            return this->m_ptr[this->m_size - 1];
+        }
+        constexpr const value_type * data() const noexcept
+        {
+            return this->m_ptr;
+        }
+        constexpr value_type * data() noexcept
+        {
+            return this->m_ptr;
+        }
+        constexpr void swap(java_direct_buffer & other) noexcept
+        {
+            std::swap(this->m_ptr, other.m_ptr);
+            std::swap(this->m_size, other.m_size);
+        }
+        friend constexpr void swap(java_direct_buffer & lhs, java_direct_buffer & rhs) noexcept
+        {
+            lhs.swap(rhs);
         }
     private:
         T * m_ptr = nullptr;

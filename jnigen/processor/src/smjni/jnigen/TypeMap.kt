@@ -332,21 +332,22 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
                                 header: String? = null): ExposedData
     {
 
-        val derivedStem = if (stem.isEmpty())
-            getStemName(classElement)
-        else stem
+        val derivedStem = if (stem.isNotEmpty())
+            stem
+        else
+            getStemName(classElement) 
 
-        val derivedCppName = if (cppName == null || cppName.isEmpty())
+        val derivedCppName = if (cppName == null || !cppName.isNotEmpty())
             "j$derivedStem"
         else
             cppName
 
-        val derivedCppClassName = if (cppClassName == null || cppClassName.isEmpty())
+        val derivedCppClassName = if (cppClassName == null || !cppClassName.isNotEmpty())
             "${derivedStem}_class"
         else
             cppClassName
 
-        val derivedHeader = if (header == null || header.isEmpty())
+        val derivedHeader = if (header == null || !header.isNotEmpty())
             "$derivedCppClassName.h"
         else
             header
@@ -363,11 +364,11 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
         }
         val packageName = (packageElement as PackageElement).qualifiedName
 
-        return if (packageName.isEmpty()) {
-            classElement.simpleName.toString()
-        } else {
+        return if (packageName.isNotEmpty()) {
             classElement.qualifiedName.toString().removePrefix("${packageElement.qualifiedName}.")
                     .replace(Regex("""\."""), "_")
+        } else {
+            classElement.simpleName.toString()
         }
     }
 

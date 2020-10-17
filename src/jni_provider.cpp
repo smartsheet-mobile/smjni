@@ -32,110 +32,18 @@ namespace smjni
             jni_record();
             ~jni_record();
 
-            JNIEnv * env() const
+            JNIEnv * env() const noexcept
                 { return m_env; }
         private:
             JNIEnv * m_env;
             bool m_attached;
         };
 
-#if USE_PTHREADS
-        class jni_provider_tls
-        {
-        public:
-            jni_provider_tls():
-                m_key{0}
-            {
-                int err = pthread_key_create(&m_key, [] (void * value) {
-                    delete(static_cast<jni_record*>(value));
-                });
-                if (err != 0)
-                    THROW_JAVA_PROBLEM("cannot create thread local key");
-            }
-            ~jni_provider_tls() noexcept
-            {
-                pthread_key_delete(m_key);
-            }
-
-            jni_record & get() const
-            {
-                jni_record * ptr = static_cast<jni_record *>(pthread_getspecific(m_key));
-                if (!ptr)
-                {
-                    ptr = new jni_record;
-                    do_set(ptr);
-                }
-                return *ptr;
-            }
-        private:
-            void do_set(jni_record * new_ptr) const
-            {
-                int err = pthread_setspecific(m_key, new_ptr);
-                if (err != 0)
-                {
-                    delete new_ptr;
-                    THROW_JAVA_PROBLEM("cannot set thread local value");
-                }
-            }
-        private:
-            pthread_key_t m_key;
-        };
-
-#elif USE_WINTHREADS
-
-        class jni_provider_tls
-        {
-        public:
-            jni_provider_tls():
-                m_index{FlsAlloc([] (void * value) {
-                    delete(static_cast<jni_record*>(value));
-                })}
-            {
-                if (m_index == FLS_OUT_OF_INDEXES)
-                    THROW_JAVA_PROBLEM("cannot create thread local index");
-            }
-            ~jni_provider_tls() noexcept
-            {
-                FlsFree(m_index);
-            }
-
-            jni_record & get() const
-            {
-                jni_record * ptr = static_cast<jni_record *>(FlsGetValue(m_index));
-                if (!ptr)
-                {
-                    ptr = new jni_record;
-                    do_set(ptr);
-                }
-                return *ptr;
-            }
-        private:
-            void do_set(jni_record * new_ptr) const
-            {
-                auto res = FlsSetValue(m_index, new_ptr);
-                if (!res)
-                {
-                    delete new_ptr;
-                    THROW_JAVA_PROBLEM("cannot set thread local value");
-                }
-            }
-        private:
-            DWORD m_index = FLS_OUT_OF_INDEXES;
-        };
-
-#endif
-
         jni_provider * g_provider = nullptr;
     }
 }
 
-jni_provider::jni_provider(JavaVM * vm) :
-    m_vm(vm),
-    m_tls(new internal::jni_provider_tls)
-{}
-
-jni_provider::~jni_provider()
-{}
+thread_local std::unique_ptr<internal::jni_record> jni_provider::m_record;
 
 void jni_provider::init(JNIEnv * initialEnv)
 {
@@ -159,7 +67,13 @@ void jni_provider::init(JavaVM * vm)
 
 JNIEnv * jni_provider::get_jni()
 { 
-    return internal::g_provider->m_tls->get().env();
+    internal::jni_record * ptr = m_record.get();
+    if (!ptr)
+    {
+        ptr = new internal::jni_record;
+        m_record.reset(ptr);
+    }
+    return ptr->env();
 }
 
 template<typename T>
@@ -180,7 +94,7 @@ internal::jni_record::jni_record():
             nullptr
         };
 
-        typedef decltype(AttachCurrentThreadAsDaemonOutputTypeDetector(&JavaVM::AttachCurrentThreadAsDaemon)) env_ret_type;
+        using env_ret_type = decltype(AttachCurrentThreadAsDaemonOutputTypeDetector(&JavaVM::AttachCurrentThreadAsDaemon));
         jint attach_res = vm->AttachCurrentThreadAsDaemon((env_ret_type)&m_env, &args);
         if (attach_res != JNI_OK)
             THROW_JAVA_PROBLEM("failed to obtain JNIEnv, error %d and failed to attach Java VM to current thread, error %d", get_res, attach_res);
