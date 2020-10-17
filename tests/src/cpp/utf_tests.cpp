@@ -23,7 +23,7 @@ using namespace smjni;
 static std::u16string convert(const char * utf8)
 {
     std::u16string ret;
-    utf8_to_utf16(utf8, utf8 + strlen(utf8), std::back_inserter(ret));
+    utf8_to_utf16(utf8, utf8 + std::char_traits<char>::length(utf8), std::back_inserter(ret));
     return ret;
 }
 
