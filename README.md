@@ -28,7 +28,7 @@ classes partially natively or using Java from within C++ application.
      convert it back to Java when returning from JNI call. 
 *    Dealing with JNI local/global reference stuff should be safe and easy by default. 
 *    It should be possible to access Java arrays via STL collection interface. 
-*    You should never have to deal with *modified UTF-8*. All string operation should either use UTF-16 or standard UTF-8
+*    You should never have to deal with *modified UTF-8*. All string operations should either use UTF-16 or standard UTF-8
 *    It should be possible to get the JNIEnv in arbitrary C++ code without the trouble of passing it through every call.
 *    You shouldn't need to find Java classes again and again every time you want to use them.
 *    All of the above should be accomplished without sacrificing performance compared to "raw" JNI use. However, if there
