@@ -39,12 +39,13 @@ target_compile_options(smjnitests
 file(GLOB GENERATED_FILES CONFIGURE_DEPENDS generated/*.h)
 
 target_sources(smjnitests PRIVATE
+    catch.hpp
     integration_tests.cpp
     java_ref_tests.cpp
     smjnitests.cpp
     string_tests.cpp
     test_util.h
-    catch.hpp
+    utf_tests.cpp
     ${GENERATED_FILES}
 )
 
