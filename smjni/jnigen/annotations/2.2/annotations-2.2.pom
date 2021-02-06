@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>smjni.jnigen</groupId>
+  <artifactId>annotations</artifactId>
+  <version>2.2</version>
+  <name>SmJNI Code Generation Annotations</name>
+  <description>Annotations used by SmJNI JniGen annotation processor to generate C++ code</description>
+  <url>https://github.com/smartsheet-mobile/smjni</url>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <scm>
+    <connection>git@github.com:smartsheet-mobile/smjni.git</connection>
+    <developerConnection>git@github.com:smartsheet-mobile/smjni.git</developerConnection>
+    <url>https://github.com/smartsheet-mobile/smjni.git</url>
+  </scm>
+</project>
