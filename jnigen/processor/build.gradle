@@ -18,7 +18,6 @@ plugins {
     id 'groovy'
     //id 'org.jetbrains.dokka' version '0.9.18'
     id 'maven-publish'
-    id "com.jfrog.bintray" version "1.8.1"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -86,6 +85,15 @@ def libraryVcsUrl = 'https://github.com/smartsheet-mobile/smjni.git'
 def libraryIssueTrackerUrl = 'https://github.com/smartsheet-mobile/smjni/issues'
 
 publishing {
+    if (project.hasProperty("localRepo")) {
+
+        repositories {
+            maven {
+                name "localRepo"
+                url project.getProperty("localRepo")
+            }
+        }
+    }
     publications {
         thePublication(MavenPublication) {
             from components.java
@@ -111,29 +119,6 @@ publishing {
     }
 }
 
-if (project.hasProperty("bintray.user") && project.hasProperty("bintray.key")) {
-    bintray {
-        user = project.getProperty('bintray.user')
-        key = project.getProperty('bintray.key')
-        publications = ['thePublication']
 
-        pkg {
-            repo = 'smjni.jnigen'
-            name = 'processor'
-            licenses = ['Apache-2.0']
-            desc = libraryDescription
-            websiteUrl = libraryWebsiteUrl
-            vcsUrl = libraryVcsUrl
-            issueTrackerUrl = libraryIssueTrackerUrl
-            override = true
-            version {
-                name = project.version
-                desc = project.version
-                released = new Date()
-            }
-        }
-
-    }
-}
 
 

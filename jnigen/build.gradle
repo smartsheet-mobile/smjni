@@ -19,7 +19,6 @@ buildscript {
 
     repositories {
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
@@ -52,7 +51,6 @@ def getOurVersion() {
 allprojects {
     repositories {
         mavenCentral()
-        jcenter()
     }
 
     project.version = getOurVersion()
