@@ -18,14 +18,8 @@
 package smjni.jnigen
 
 import javax.annotation.processing.RoundEnvironment
-import javax.lang.model.element.AnnotationMirror
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.PackageElement
-import javax.lang.model.element.TypeElement
-import javax.lang.model.type.ArrayType
-import javax.lang.model.type.DeclaredType
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
+import javax.lang.model.element.*
+import javax.lang.model.type.*
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic
 
@@ -146,6 +140,10 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
                 val element = ((type as DeclaredType).asElement() as TypeElement)
                 nativeNameOf(element)
             }
+            TypeKind.TYPEVAR -> {
+                val element = ((type as TypeVariable).asElement() as TypeParameterElement)
+                nativeNameOf(element)
+            }
             TypeKind.ARRAY -> {
 
                 val array = type as ArrayType
@@ -158,7 +156,7 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
                 arrayTypeName
             }
             else -> {
-                error("Logic error: impossible type kind")
+                error("Logic error: impossible type kind: ${type.kind.name}")
             }
         }
     }
@@ -195,6 +193,13 @@ internal class TypeMap(ctxt: Context, env: RoundEnvironment) {
         if (ret == null)
             throw ProcessingException("${el.qualifiedName} is not exposed to C++ via annotation or command line", el)
         return ret
+    }
+
+    private fun nativeNameOf(el: TypeParameterElement): String {
+        val bounds = el.bounds;
+        if (bounds.size > 1)
+            return "jobject"
+        return nativeNameOf(bounds[0])
     }
 
     private fun getExposedDataFromAnnotation(classElement: TypeElement,
