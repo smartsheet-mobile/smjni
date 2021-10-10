@@ -1,5 +1,11 @@
 # SmJNI library #
 
+<span style="font-size:large;">**Note: This library is no longer actively maintained.<br />For an actively maintained and supported fork please migrate to SimpleJNI at https://github.com/gershnik/SimpleJNI**</span>
+
+Original content below
+
+-----
+
 A powerful lighweight C++ wrapper for JNI
 
 ## Purpose
