@@ -30,9 +30,11 @@
 #endif
 
 #if defined(_MSC_VER)
+    #pragma message("SmJNI is no longer actively maintained. For an actively maintained and supported fork please migrate to SimpleJNI at https://github.com/gershnik/SimpleJNI")
     #define SMJNI_FORCE_INLINE __forceinline
     #define SMJNI_NO_INLINE __declspec(noinline)
 #elif defined(__GNUC__) || defined(__clang__)
+    #pragma GCC warning "SmJNI is no longer actively maintained. For an actively maintained and supported fork please migrate to SimpleJNI at https://github.com/gershnik/SimpleJNI"
     #define SMJNI_FORCE_INLINE [[gnu::always_inline]] inline
     #define SMJNI_NO_INLINE [[gnu::noinline]]
 #endif

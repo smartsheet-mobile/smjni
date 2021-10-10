@@ -28,6 +28,13 @@ class Processor: javax.annotation.processing.Processor  {
 
     override fun init(processingEnv: ProcessingEnvironment?) {
         m_env = processingEnv
+        println("SmJNI is no longer actively maintained.")
+        println("For an actively maintained and supported fork please migrate to SimpleJNI at https://github.com/gershnik/SimpleJNI")
+        println("Instructions how to configure annotation processor can be found at https://github.com/gershnik/SimpleJNI/wiki/Integrating-JniGen")
+
+        m_env!!.messager.printMessage(Diagnostic.Kind.WARNING, "SmJNI is no longer actively maintained.")
+        m_env!!.messager.printMessage(Diagnostic.Kind.WARNING, "For an actively maintained and supported fork please migrate to SimpleJNI at https://github.com/gershnik/SimpleJNI")
+        m_env!!.messager.printMessage(Diagnostic.Kind.WARNING, "Instructions how to configure annotation processor can be found at https://github.com/gershnik/SimpleJNI/wiki/Integrating-JniGen")
     }
 
     override fun getSupportedOptions(): MutableSet<String> {
